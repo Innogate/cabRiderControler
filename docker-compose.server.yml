@@ -1,3 +1,4 @@
+
 services:
   api:
     image: tuhinsu/node:lts
@@ -18,9 +19,12 @@ services:
       - USE_REDIS=${USE_REDIS}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
-    user: vscode
+    user: root
     command: bash start.sh
     restart: unless-stopped
+    networks:
+      - loop
+      - common
 
   redis:
     image: redis
@@ -28,7 +32,15 @@ services:
     volumes:
       - ./db/redis:/data
     restart: unless-stopped
-    
+    networks:
+      - loop
+
 volumes:
   dotfiles:
+    external: true
+
+networks:
+  loop:
+    driver: bridge
+  common:
     external: true
