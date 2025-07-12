@@ -5,3 +5,4 @@ db/data
 db/redis
 package-lock.json
 .env
+node_modules
