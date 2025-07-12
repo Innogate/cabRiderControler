@@ -1,0 +1,34 @@
+services:
+  api:
+    image: tuhinsu/node:lts
+    container_name: api.${PROJECT_DOMAIN}
+    volumes:
+      - ./api:/app
+      - dotfiles:/home/vscode
+    environment:
+      - PRODUCTION=${PRODUCTION}
+      - VERSION=${VERSION}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - USE_REDIS=${USE_REDIS}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+    user: vscode
+    command: bash start.sh
+    restart: unless-stopped
+
+  redis:
+    image: redis
+    container_name: redis.${PROJECT_DOMAIN}
+    volumes:
+      - ./db/redis:/data
+    restart: unless-stopped
+    
+volumes:
+  dotfiles:
+    external: true
