@@ -9,7 +9,7 @@ module.exports = async function handleWS(context) {
       try {
         const result = await loginUser(params.email, params.password);
         if (result.user) {
-          console.log(response);
+          //console.log(response);
           ws.send(JSON.stringify({msg: "Login successful", type: "success", ...result}));
           ws._authenticated = true;
           ws._user = result.user;
