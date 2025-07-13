@@ -11,6 +11,7 @@ const { gatAllDriverSalarySetupList } = require("../controllers/driverSalarySetu
 const { gatAllPartyRateList } = require("../controllers/partyRateMasterController");
 const { gatAllPartyMaster, createUpdateParty } = require("../controllers/partyMasterController")
 const { gateAllVendor } = require("../controllers/vendorMasterController")
+const { gateAllGuest } = require("../controllers/guestMasterController")
 module.exports = async function handleWS(context) {
   try {
     const { ws, type, command, body, parts, clients } = context;
@@ -406,6 +407,44 @@ module.exports = async function handleWS(context) {
           ws.send(
             JSON.stringify({
               for: 'getallvendor',
+              ...result,
+            })
+          );
+        } else {
+          ws.send(
+            JSON.stringify({
+              msg: "No data found",
+              type: "warning",
+              ...result,
+            })
+          );
+        }
+      } catch (err) {
+        ws.send(JSON.stringify({ msg: "Server error", type: "error" }));
+      }
+    }
+
+
+
+
+
+
+
+
+    // Guest Master
+    else if (type === "POST" && parts[0] === "gatAllGuestMaster") {
+      const user = ws._user;
+      const params = {
+        ...body,
+        company_id: user?.company_id,
+        user_id: user?.Id
+      };
+      try {
+        const result = await gateAllGuest(params);
+        if (result) {
+          ws.send(
+            JSON.stringify({
+              for: 'getallguest',
               ...result,
             })
           );
