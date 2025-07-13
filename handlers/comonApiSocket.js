@@ -1,4 +1,4 @@
-const { gatAllCityList, gatAllDriverListDropdown, deleteTableData } = require("../controllers/comonApiController")
+const { gatAllCityList, gatAllDriverListDropdown, deleteTableData, gatAllBranchListDropdown } = require("../controllers/comonApiController")
 
 module.exports = async function handleWS(context) {
     try {
@@ -97,10 +97,36 @@ module.exports = async function handleWS(context) {
             } catch (err) {
                 ws.send(JSON.stringify({ msg: "Server error", type: "error" }));
             }
+        } else if (type === "POST" && parts[0] === "gatAllBranchDropDown") {
+            const user = ws._user;
+
+            const params = {
+                ...body,
+                company_id: user?.company_id,
+                user_id: user?.Id
+            };
+            try {
+                const result = await gatAllBranchListDropdown(params);
+                if (result?.data?.length > 0) {
+                    ws.send(
+                        JSON.stringify({
+                            for: 'getAllBranchDropdown',
+                            ...result,
+                        })
+                    );
+                } else {
+                    ws.send(
+                        JSON.stringify({
+                            msg: "No data found",
+                            type: "warning",
+                            ...result,
+                        })
+                    );
+                }
+            } catch (err) {
+                ws.send(JSON.stringify({ msg: "Server error", type: "error" }));
+            }
         }
-
-
-
 
     } catch (e) {
         console.error("WS Handler Error:", e);
