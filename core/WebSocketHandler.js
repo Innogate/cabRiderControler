@@ -117,7 +117,7 @@ class WebSocketHandler {
     return user;
   }
 
-  logout() {
+  destroy() {
     this._user = null;
     this.ws._authenticated = false;
     this.ws._user = null;

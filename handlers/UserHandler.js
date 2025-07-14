@@ -34,7 +34,7 @@ class UserHandler extends WebSocketHandler {
 
   async logout() {
     this.send({ type: "success", msg: "Logout logic placeholder" });
-    this.logout();
+    this.destroy();
   }
 
   async register() {
