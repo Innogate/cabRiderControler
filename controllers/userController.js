@@ -1,6 +1,5 @@
 const sql = require("mssql");
-const PDO = require("../config/database");
-const { generateToken } = require("../middlewares/auth");
+const PDO = require("../core/pod.js");
 
 // Get user by ID with Redis-cached SELECT query
 exports.getUser = async (id) => {
@@ -34,18 +33,6 @@ exports.loginUser = async (username, password) => {
       { name: "TotalCount", type: sql.Int },
     ],
   });
-
-  if (output.StatusID == 1) {
-    if (data[0]) {
-      const token = generateToken(data[0]);
-      return {
-        user: data[0],
-        token,
-        status: output.StatusID,
-        message: output.StatusMessage,
-      };
-    }
-  }
 
   return {
     user: data[0] || null,

@@ -1,5 +1,5 @@
 const sql = require("mssql");
-const PDO = require("../config/database");
+const PDO = require("../core/pod.js");
 
 
 exports.gatAllPartyMaster = async (params) => {
