@@ -24,12 +24,12 @@ class CommonHandler extends WebSocketHandler {
     };
     const result = await gatAllCityList(params);
     if (result?.data?.length > 0) {
-      ws.send({
+      this.send({
         for: "getAllCityDropdown",
         ...result,
       });
     } else {
-      ws.send({
+      this.send({
         msg: "No data found",
         type: "warning",
         ...result,
