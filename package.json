@@ -1,25 +1,26 @@
 {
   "name": "api",
   "version": "1.0.0",
-  "description": "Cab Rider api server",
+  "description": "A powerful, scalable, and class-based WebSocket server architecture using Node.js with hot-reload development support. This project provides clean namespacing for commands, JWT-based authentication, automatic handler registration, and developer-friendly APIs.",
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "nodemon",
+    "dev:server": "nodemon --watch . --ext js --ignore node_modules --exec node server.js",
     "dev:client": "vite",
     "build": "vite build",
-    "serve": "node index.js"
+    "serve": "node server.js",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Innogate/Cab-Rider.git"
+    "url": "git+https://github.com/tuhin-su/vita-node-fremwork.git"
   },
   "author": "tuhin-su",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Innogate/Cab-Rider/issues"
+    "url": "https://github.com/tuhin-su/vita-node-fremwork/issues"
   },
-  "homepage": "https://github.com/Innogate/Cab-Rider#readme",
+  "homepage": "https://github.com/tuhin-su/vita-node-fremwork#readme",
   "dependencies": {
     "dotenv": "^16.5.0",
     "jsonwebtoken": "^9.0.2",
@@ -31,5 +32,6 @@
     "concurrently": "^9.1.2",
     "nodemon": "^3.1.10",
     "vite": "^6.3.5"
-  }
+  },
+  "keywords": []
 }

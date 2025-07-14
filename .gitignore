@@ -1,8 +1,5 @@
-.tmp
-.bkp
-*/node_modules
-db/data
-db/redis
-package-lock.json
+node_modules/
 .env
-node_modules
+db/
+package-lock.json
+commands/

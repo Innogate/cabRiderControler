@@ -1,0 +1,107 @@
+const WebSocketHandler = require("../core/WebSocketHandler");
+const jwt = require("../core/jwt");
+
+// Controllers
+const {
+  gatAllCityList,
+  gatAllDriverListDropdown,
+  deleteTableData,
+  gatAllBranchListDropdown,
+} = require("../controllers/comonApiController");
+
+class CommonHandler extends WebSocketHandler {
+  constructor() {
+    super();
+    this.publicCommands = [];
+  }
+
+  async gatAllCityDropDown() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await gatAllCityList(params);
+    if (result?.data?.length > 0) {
+      ws.send({
+        for: "getAllCityDropdown",
+        ...result,
+      });
+    } else {
+      ws.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+  async deleteData() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await deleteTableData(params);
+    if (result) {
+      this.send({
+        for: "deleteData",
+        ...result,
+      });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+  async gatAllDriverDropDown() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await gatAllDriverListDropdown(params);
+    if (result?.data?.length > 0) {
+      this.send({
+        for: "getAllDriverDropdown",
+        ...result,
+      });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+  async gatAllBranchDropDown() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await gatAllBranchListDropdown(params);
+    if (result?.data?.length > 0) {
+      this.send({
+        for: "getAllBranchDropdown",
+        ...result,
+      });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+}
+
+module.exports = new CommonHandler();
