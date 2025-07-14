@@ -27,8 +27,8 @@ class UserHandler extends WebSocketHandler {
       });
     }
     this.onlyOthers({ type: "info", msg: `Someone targeted login` });
-    this.broadcast({ type: "info", msg: `Someone targeted login` });
-    this.broadcastTo({ event: 'refresh' }, { role: 'admin', branch: '001' });
+    // this.broadcast({ type: "info", msg: `Someone targeted login` });
+    // this.broadcastTo({ event: 'refresh' }, { role: 'admin', branch: '001' });
 
   }
 
