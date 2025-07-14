@@ -11,7 +11,7 @@ class UserHandler extends WebSocketHandler {
   async login() {
     const { ...params } = this.body;
     const result = await loginUser(params.email, params.password);
-    if (result.status == 1) {
+    if (result.status == 1 && result.user) {
       result.token = jwt.sign(result.user);
       this.authenticate(result.token);
       this.send({
@@ -26,6 +26,10 @@ class UserHandler extends WebSocketHandler {
         ...result,
       });
     }
+    this.onlyOthers({ type: "info", msg: `Someone targeted login` });
+    this.broadcast({ type: "info", msg: `Someone targeted login` });
+    this.broadcastTo({ event: 'refresh' }, { role: 'admin', branch: '001' });
+
   }
 
   async logout() {
