@@ -17,7 +17,7 @@ services:
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - USE_REDIS=${USE_REDIS}
-      - SECRET_KEY=${SECRET_KEY}
+      - SECRET_KEY=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
     user: root
     command: bash start.sh
