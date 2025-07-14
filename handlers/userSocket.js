@@ -1,4 +1,5 @@
 const { loginUser } = require("../controllers/userController");
+const { broadcast } = require("../utility/functions");
 
 module.exports = async function handleWS(context) {
   try {
@@ -10,25 +11,45 @@ module.exports = async function handleWS(context) {
         const result = await loginUser(params.email, params.password);
         if (result.user) {
           //console.log(response);
-          ws.send(JSON.stringify({msg: "Login successful", type: "success", ...result}));
+          ws.send(
+            JSON.stringify({
+              msg: "Login successful",
+              type: "success",
+              ...result,
+            })
+          );
           ws._authenticated = true;
           ws._user = result.user;
         } else {
-          ws.send(JSON.stringify({ msg: "Invalid credentials", type: "error", ...result }));
+          console.log("Broadcasting login message");
+          broadcast(
+            clients,
+            JSON.stringify({
+              msg: "Some one tried to login",
+              type: "warn",
+            })
+          );
+          ws.send(
+            JSON.stringify({
+              msg: "Invalid credentials",
+              type: "error",
+              ...result,
+            })
+          );
         }
       } catch (err) {
         console.error(err);
         ws.send(JSON.stringify({ msg: "Server error", type: "error" }));
       }
-    }
-    else if (type === "POST" && parts[0] === "logout") {
+    } else if (type === "POST" && parts[0] === "logout") {
       ws._authenticated = false;
       ws._user = null;
       ws.send(JSON.stringify({ message: "Logout successful" }));
-      
     }
   } catch (e) {
     console.error(e);
-    context.ws.send(JSON.stringify({ msg: "Bad request format", type: "error" }));
+    context.ws.send(
+      JSON.stringify({ msg: "Bad request format", type: "error" })
+    );
   }
 };

@@ -39,10 +39,6 @@ module.exports = async function handleWS(context) {
             ...result,
           })
         );
-        // broadcast(clients, JSON.stringify({
-        //       msg: "Someone fetch booking list",
-        //       type: "warn"
-        //     }), ws._user.Id, ws._user.company_id);
       } catch (err) {
         console.error(err);
         ws.send(JSON.stringify({ msg: "Server error", type: "error" }));
