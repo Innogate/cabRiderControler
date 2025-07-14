@@ -8,6 +8,7 @@ services:
       - dotfiles:/home/vscode
     environment:
       - PRODUCTION=${PRODUCTION}
+      - PORT=80
       - VERSION=${VERSION}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
