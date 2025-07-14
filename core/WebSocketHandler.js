@@ -70,6 +70,22 @@ class WebSocketHandler {
     }
   }
 
+  broadcastTo(payload, condition = {}) {
+    const msg = JSON.stringify(payload);
+
+    for (const client of this.wss.clients) {
+      if (client.readyState !== 1 || !client._user) continue;
+
+      const match = Object.entries(condition).every(
+        ([key, value]) => client._user[key] === value
+      );
+
+      if (match) {
+        client.send(msg);
+      }
+    }
+  }
+
   log(...args) {
     console.log(`[${this._namespace}]`, ...args);
   }
