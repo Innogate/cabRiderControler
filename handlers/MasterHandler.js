@@ -27,6 +27,7 @@ const {
 } = require("../controllers/partyMasterController");
 const { gateAllVendor } = require("../controllers/vendorMasterController");
 const { gateAllGuest } = require("../controllers/guestMasterController");
+const { getAllUserList } = require("../controllers/userMasterController")
 
 class MasterHandler extends WebSocketHandler {
   constructor() {
@@ -345,6 +346,31 @@ class MasterHandler extends WebSocketHandler {
       });
     }
   }
+
+
+ /// user list
+  async getAllUserMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await getAllUserList(params);
+    if (result) {
+      this.send({
+        for: "getAllUserList",
+        ...result,
+      });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
 }
 
 module.exports = new MasterHandler();
