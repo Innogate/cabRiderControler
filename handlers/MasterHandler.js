@@ -285,10 +285,14 @@ class MasterHandler extends WebSocketHandler {
     };
     const result = await createUpdateParty(params);
     if (result) {
-      this.send({
+      // this.send({
+      //   for: "createUpdateParty",
+      //   ...result,
+      // });
+      this.broadcastTo({
         for: "createUpdateParty",
-        ...result,
-      });
+        ...result
+      }, { company_id: this._user.company_id })
     } else {
       this.send({
         msg: "No data found",
