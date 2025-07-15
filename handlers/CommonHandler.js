@@ -7,6 +7,7 @@ const {
   gatAllDriverListDropdown,
   deleteTableData,
   gatAllBranchListDropdown,
+  getAllPartyDropDown,
 } = require("../controllers/comonApiController");
 
 class CommonHandler extends WebSocketHandler {
@@ -102,6 +103,29 @@ class CommonHandler extends WebSocketHandler {
       });
     }
   }
+  
+  async getAllPartyNameDropdown(){
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await getAllPartyDropDown(params);
+    if (result?.data?.length > 0) {
+      this.send({
+        for: "getAllPartyDropdown",
+        ...result,
+      });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
 }
 
 module.exports = new CommonHandler();
