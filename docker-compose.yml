@@ -19,7 +19,7 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
     user: vscode
-    # command: bash start.sh
+    command: bash start.sh
     restart: unless-stopped
 
   redis:
