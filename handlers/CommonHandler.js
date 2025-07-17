@@ -8,6 +8,7 @@ const {
   deleteTableData,
   gatAllBranchListDropdown,
   getAllPartyDropDown,
+  getAllPartyRateByCityDropdown,
 } = require("../controllers/comonApiController");
 
 class CommonHandler extends WebSocketHandler {
@@ -103,8 +104,8 @@ class CommonHandler extends WebSocketHandler {
       });
     }
   }
-  
-  async getAllPartyNameDropdown(){
+
+  async getAllPartyNameDropdown() {
     this.requireAuth();
     const params = {
       ...this.body,
@@ -115,6 +116,28 @@ class CommonHandler extends WebSocketHandler {
     if (result?.data?.length > 0) {
       this.send({
         for: "getAllPartyDropdown",
+        ...result,
+      });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+  async getAllPartyRateByCity() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await getAllPartyRateByCityDropdown(params);
+    if (result?.data?.length > 0) {
+      this.send({
+        for: "getAllPartyRateByCityDropdown",
         ...result,
       });
     } else {
