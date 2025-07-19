@@ -26,8 +26,8 @@ const {
   gatAllPartyMaster,
   createUpdateParty,
 } = require("../controllers/partyMasterController");
-const { gateAllVendor, createUpdateVendorMaster } = require("../controllers/vendorMasterController");
-const { gateAllGuest, createUpdateGuest } = require("../controllers/guestMasterController");
+const { gateAllVendor } = require("../controllers/vendorMasterController");
+const { gateAllGuest, createUpdateGuest, updateGuest } = require("../controllers/guestMasterController");
 const { getAllUserList, createUpdateUser } = require("../controllers/userMasterController")
 const { getAllMonthlyDuty, createUpdateMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
 
@@ -478,6 +478,29 @@ async createUpdatePartyRateMaster() {
     }
   }
 
+
+
+  async updateGuestMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await updateGuest(params);
+    if (result) {
+      this.broadcastTo({
+        for: "createUpdateGuest",
+        ...result,
+      }, { company_id: this._user.company_id })
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
 
 }
 
