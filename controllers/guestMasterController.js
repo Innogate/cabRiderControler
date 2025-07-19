@@ -87,6 +87,15 @@ exports.createGuest = async (params) => {
 
 
 exports.updateGuest = async (params) =>{
+
+   const pdo = new PDO();
+  const data = await pdo.execute("SELECT * FROM vendor_mast")
+   
+  console.log("data", data)
+
+  return{
+    data: data,
+  }
   
 } 
 
