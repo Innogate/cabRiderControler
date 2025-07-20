@@ -31,6 +31,7 @@ const { gateAllGuest, createUpdateGuest, updateGuest } = require("../controllers
 const { getAllUserList, createUpdateUser } = require("../controllers/userMasterController")
 const { getAllMonthlyDuty, createUpdateMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
 const { gateAllGuest, updateGuest, createGuest } = require("../controllers/guestMasterController");
+const { getAllGuest, updateGuest, createGuest } = require("../controllers/guestMasterController");
 const { getAllUserList } = require("../controllers/userMasterController")
 const { getAllMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
 
@@ -391,7 +392,7 @@ async createUpdatePartyRateMaster() {
       company_id: this._user.company_id,
       user_id: this._user.Id,
     };
-    const result = await gateAllGuest(params);
+    const result = await getAllGuest(params);
     if (result) {
       this.send({
         for: "getallguest",
