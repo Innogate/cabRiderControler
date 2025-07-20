@@ -19,7 +19,7 @@ const {
   gatAllDriverSalarySetupList,
 } = require("../controllers/driverSalarySetupMasterController");
 const {
-  gatAllPartyRateList,
+  getAllPartyRateList,
 } = require("../controllers/partyRateMasterController");
 const {
   gatAllPartyMaster,
@@ -234,14 +234,14 @@ class MasterHandler extends WebSocketHandler {
     }
   }
 
-  async gatAllPartyRate() {
+  async getAllPartyRate() {
     this.requireAuth();
     const params = {
       ...this.body,
       company_id: this._user.company_id,
       user_id: this._user.Id,
     };
-    const result = await gatAllPartyRateList(params);
+    const result = await getAllPartyRateList(params);
     if (result) {
       this.send({
         for: "getallpartyrate",
