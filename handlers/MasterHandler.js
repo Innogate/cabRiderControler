@@ -25,7 +25,7 @@ const {
   gatAllPartyMaster,
   createUpdateParty,
 } = require("../controllers/partyMasterController");
-const { gateAllVendor } = require("../controllers/vendorMasterController");
+const { gateAllVendor, createUpdateVendorMaster } = require("../controllers/vendorMasterController");
 const { gateAllGuest } = require("../controllers/guestMasterController");
 const { getAllUserList } = require("../controllers/userMasterController")
 const { getAllMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
@@ -304,6 +304,8 @@ class MasterHandler extends WebSocketHandler {
     }
   }
 
+  //get all vendor master
+
   async gatAllVendorMaster() {
     this.requireAuth();
     const params = {
@@ -317,6 +319,29 @@ class MasterHandler extends WebSocketHandler {
         for: "getallvendor",
         ...result,
       });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+  // create update vendor master
+  async createUpdateVendor() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await createUpdateVendorMaster(params);
+    if (result) {
+      this.broadcastTo({
+        for: "createUpdateVendorMaster",
+        ...result
+      }, { company_id: this._user.company_id })
     } else {
       this.send({
         msg: "No data found",
@@ -347,7 +372,6 @@ class MasterHandler extends WebSocketHandler {
       });
     }
   }
-
 
   /// user list
   async getAllUserMaster() {
