@@ -30,6 +30,9 @@ const { gateAllVendor } = require("../controllers/vendorMasterController");
 const { gateAllGuest, createUpdateGuest, updateGuest } = require("../controllers/guestMasterController");
 const { getAllUserList, createUpdateUser } = require("../controllers/userMasterController")
 const { getAllMonthlyDuty, createUpdateMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
+const { gateAllGuest, updateGuest, createGuest } = require("../controllers/guestMasterController");
+const { getAllUserList } = require("../controllers/userMasterController")
+const { getAllMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
 
 class MasterHandler extends WebSocketHandler {
   constructor() {
@@ -478,6 +481,27 @@ async createUpdatePartyRateMaster() {
     }
   }
 
+  async createGuestMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await createGuest(params);
+    if (result) {
+      this.broadcastTo({
+        for: "createUpdateGuest",
+        ...result,
+      }, { company_id: this._user.company_id })
+    } else {
+      this.send({
+        msg:  result.StatusMessage,
+        type: "warning",
+        ...result,
+      });
+    }
+  }
 
 
   async updateGuestMaster() {
