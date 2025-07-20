@@ -2,14 +2,14 @@ const sql = require("mssql");
 const PDO = require("../core/pod.js");
 
 
-exports.gatAllPartyRateList = async (params) => {
+exports.getAllPartyRateList = async (params) => {
   const {
-    id = 0,
-    PageNo = 1,
-    PageSize = 10,
+    id,
+    PageNo,
+    PageSize,
     Search = '',
-    user_id = 0,
-    company_id = 1,
+    user_id,
+    company_id,
   } = params;
   const pdo = new PDO();
   const { data, output } = await pdo.callProcedure({
