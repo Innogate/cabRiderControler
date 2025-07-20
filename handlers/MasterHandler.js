@@ -26,7 +26,7 @@ const {
   createUpdateParty,
 } = require("../controllers/partyMasterController");
 const { gateAllVendor } = require("../controllers/vendorMasterController");
-const { gateAllGuest, createUpdateGuest, updateGuest } = require("../controllers/guestMasterController");
+const { gateAllGuest, updateGuest, createGuest } = require("../controllers/guestMasterController");
 const { getAllUserList } = require("../controllers/userMasterController")
 const { getAllMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
 
@@ -433,7 +433,7 @@ class MasterHandler extends WebSocketHandler {
       }, { company_id: this._user.company_id })
     } else {
       this.send({
-        msg: "No data found",
+        msg:  result.StatusMessage,
         type: "warning",
         ...result,
       });
