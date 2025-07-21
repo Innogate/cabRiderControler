@@ -433,7 +433,7 @@ class MasterHandler extends WebSocketHandler {
       }, { company_id: this._user.company_id })
     } else {
       this.send({
-        msg:  result.StatusMessage,
+        msg: result.StatusMessage,
         type: "warning",
         ...result,
       });
@@ -449,16 +449,16 @@ class MasterHandler extends WebSocketHandler {
       user_id: this._user.Id,
     };
     const result = await updateGuest(params);
-    if (result) {
+    if (result.StatusID === 1) {
       this.broadcastTo({
-        for: "createUpdateGuest",
+        for: "UpdateGuest",
         ...result,
       }, { company_id: this._user.company_id })
     } else {
       this.send({
-        msg: "No data found",
-        type: "warning",
-        ...result,
+        StatusMessage: result.StatusMessage,
+        StatusID: result.StatusID,
+        data: result.data,
       });
     }
   }
