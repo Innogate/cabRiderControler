@@ -85,17 +85,72 @@ exports.createGuest = async (params) => {
   };
 };
 
+// exports.updateGuest = async (params) => {
+//   const pdo = new PDO();
+//   const result = await pdo.execute({
+//     sqlQuery: "UPDATE GuestMast SET GuestName = 'amit maity maity don' OUTPUT INSERTED.* WHERE ID = 1;"});
 
-exports.updateGuest = async (params) =>{
+//   console.log("result", result);
 
-   const pdo = new PDO();
-  const data = await pdo.execute("SELECT * FROM vendor_mast")
-   
-  console.log("data", data)
+//   return {
+//     StatusID: result.StatusID,
+//     message: result.StatusMessage,
+//     affectedRows: result.rowsAffected,
+//     data: result.data ?? []
+//   };
+// };
 
-  return{
-    data: data,
-  }
+exports.updateGuest = async (params) => {
   
-} 
+  const { ids, PartyID, name, ContactNo, WhatsappNo, Email_ID, Honorific } = params;
+  const pdo = new PDO();
 
+  try {
+    // Convert IDs array to comma-separated string
+    const idList = ids.join(',');
+
+    console.log("id list", idList)
+
+    // Step 1: Check for duplicate name in other records
+    const duplicateCheck = await pdo.execute({
+      sqlQuery: `SELECT * FROM GuestMast WHERE GuestName = '${name}' AND ID NOT IN (${idList})`
+    });
+
+    if (duplicateCheck.length > 0) {
+      return {
+        StatusID: 2,
+        StatusMessage: "Guest name already exists.",
+        data: []
+      };
+    }
+
+    // Step 2: Perform update
+    const updateQuery = `
+      UPDATE GuestMast 
+      SET 
+        GuestName = '${name}',
+        PartyID = ${PartyID},
+        ContactNo = '${ContactNo}',
+        WhatsappNo = '${WhatsappNo}',
+        Email_ID = '${Email_ID}',
+        Honorific = '${Honorific}'
+      WHERE ID IN (${idList});
+    `;
+
+    const result = await pdo.execute({ sqlQuery: updateQuery });
+
+    return {
+      StatusID: 1,
+      StatusMessage: `Guest(s) updated successfully.`,
+      data: result
+    };
+
+  } catch (error) {
+    console.error("Update Guest Error:", error);
+    return {
+      StatusID: 0,
+      StatusMessage: "Something went wrong while updating the guest(s).",
+      data: []
+    };
+  }
+};
