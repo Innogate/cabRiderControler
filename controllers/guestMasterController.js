@@ -101,17 +101,15 @@ exports.createGuest = async (params) => {
 // };
 
 exports.updateGuest = async (params) => {
-  
+
   const { ids, PartyID, name, ContactNo, WhatsappNo, Email_ID, Honorific } = params;
   const pdo = new PDO();
 
   try {
-    // Convert IDs array to comma-separated string
     const idList = ids.join(',');
 
     console.log("id list", idList)
 
-    // Step 1: Check for duplicate name in other records
     const duplicateCheck = await pdo.execute({
       sqlQuery: `SELECT * FROM GuestMast WHERE GuestName = '${name}' AND ID NOT IN (${idList})`
     });
@@ -124,7 +122,6 @@ exports.updateGuest = async (params) => {
       };
     }
 
-    // Step 2: Perform update
     const updateQuery = `
       UPDATE GuestMast 
       SET 
