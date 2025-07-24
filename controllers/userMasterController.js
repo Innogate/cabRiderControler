@@ -42,7 +42,7 @@ exports.getAllUserList = async (params) => {
 exports.createUpdateUser = async (params) => {
   const {
     id,
-    name,
+    Name,
     mobile,
     email,
     username,
@@ -56,7 +56,7 @@ exports.createUpdateUser = async (params) => {
     procName: "sp_app_create_Usermast",
     inputParams: [
       { name: "id", type: sql.Int, value: id },
-      { name: "name", type: sql.NVarChar(50), value: name },
+      { name: "Name", type: sql.NVarChar(50), value: Name },
       { name: "mobile", type: sql.NVarChar(50), value: mobile },
       { name: "email", type: sql.NVarChar(50), value: email },
       { name: "username", type: sql.NVarChar(50), value: username },
