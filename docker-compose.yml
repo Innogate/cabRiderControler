@@ -1,7 +1,7 @@
 services:
   api:
     image: tuhinsu/node:lts
-    container_name: api.${PROJECT_DOMAIN}
+    container_name: api.${PROJECT_NAME}.${PROJECT_DOMAIN}
     volumes:
       - .:/app
       - dotfiles:/home/vscode
@@ -24,7 +24,7 @@ services:
 
   redis:
     image: redis
-    container_name: redis.${PROJECT_DOMAIN}
+    container_name: redis.${PROJECT_NAME}.${PROJECT_DOMAIN}
     volumes:
       - ./db/redis:/data
     restart: unless-stopped
