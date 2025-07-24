@@ -29,7 +29,7 @@ const {
 const { gateAllVendor, createUpdateVendorMaster } = require("../controllers/vendorMasterController");
 const { gateAllGuest } = require("../controllers/guestMasterController");
 const { getAllUserList, createUpdateUser } = require("../controllers/userMasterController")
-const { getAllMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
+const { getAllMonthlyDuty, createUpdateMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
 
 class MasterHandler extends WebSocketHandler {
   constructor() {
@@ -474,6 +474,28 @@ async createUpdatePartyRateMaster() {
         msg: "No data found",
         type: "warning",
         ...result,
+      });
+    }
+  }
+
+
+  async createUpdateMonthlyDutyMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await createUpdateMonthlyDuty(params);
+    if (result) {
+      this.broadcastTo({
+        for: "createUpdateMonthlyDuty",
+        ...result,
+      }, { company_id: this._user.company_id })
+    } else {
+      this.send({
+        StatusMessage: result.StatusMessage,
+        data: result.data,
       });
     }
   }
