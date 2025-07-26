@@ -46,6 +46,7 @@ class BookingHandler extends WebSocketHandler {
         ...result,
       });
     }
+    this.log(result)
     this.send({
       for: "bookingTableData",
       ...result,
