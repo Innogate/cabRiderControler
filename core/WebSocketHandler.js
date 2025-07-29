@@ -124,7 +124,7 @@ class WebSocketHandler {
   }
 
   requireAuth() {
-    console.log(this._user);
+    // console.log(this._user);
     if (!this._user) {
       throw new Error("Authentication required");
     }

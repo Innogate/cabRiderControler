@@ -146,7 +146,7 @@ exports.createBookingDetails = async (params) => {
       { name: "PartyRate", type: sql.Int, value: PartyRate },
       { name: "Price", type: sql.VarChar(50), value: Price },
       { name: "KMRate", type: sql.VarChar(50), value: KMRate },
-      { name: "HourRate", type: sql.VarChar(50), value: HourRate },
+      { name: "HourRate", type: sql.Int, value: HourRate },
       { name: "BookedEmail", type: sql.VarChar(100), value: BookedEmail },
       { name: "branch_id", type: sql.Int, value: branch_id },
       { name: "isCash", type: sql.Int, value: isCash },

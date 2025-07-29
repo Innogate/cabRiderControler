@@ -7,7 +7,7 @@ let globalRedis = null;
 // Initialize SQL Pool
 async function initPool() {
   if (!globalPool) {
-    console.log("⏳ Connecting to SQL Server...");
+    // console.log("⏳ Connecting to SQL Server...");
     globalPool = await sql.connect({
       user: process.env.DB_USER,
       password: process.env.DB_PASS,
@@ -19,7 +19,7 @@ async function initPool() {
         encrypt: false,
       },
     });
-    console.log("✅ SQL Server connected.");
+    // console.log("✅ SQL Server connected.");
   }
   return globalPool;
 }
@@ -27,7 +27,7 @@ async function initPool() {
 // Initialize Redis
 async function initRedis() {
   if (!globalRedis && process.env.USE_REDIS === "true") {
-    console.log("⏳ Connecting to Redis...");
+    // console.log("⏳ Connecting to Redis...");
     globalRedis = redis.createClient({
       socket: {
         host: process.env.REDIS_HOST,
@@ -36,7 +36,7 @@ async function initRedis() {
     });
     globalRedis.on("error", (err) => console.error("❌ Redis error:", err));
     await globalRedis.connect();
-    console.log("✅ Redis connected.");
+    // console.log("✅ Redis connected.");
   }
   return globalRedis;
 }
@@ -70,19 +70,19 @@ class PDO {
     if (this.redis && key) {
       const cached = await this.redis.get(key);
       if (cached) {
-        console.log(`🟢 Data retrieved from Redis cache for SQL key: ${key}`);
+        // console.log(`🟢 Data retrieved from Redis cache for SQL key: ${key}`);
         return JSON.parse(cached);
       }
     }
 
-    console.log("🟡 Executing SQL query from DB...");
+    // console.log("🟡 Executing SQL query from DB...");
     const result = await this.pool.request().query(sqlQuery);
     const data = result.recordset;
 
     if (this.redis && key) {
-      console.log(
-        `📝 Caching SQL result in Redis with key: ${key} (TTL: ${ttl}s)`
-      );
+      // console.log(
+      //   `📝 Caching SQL result in Redis with key: ${key} (TTL: ${ttl}s)`
+      // );
       await this.redis.set(key, JSON.stringify(data), { EX: ttl });
     }
 
@@ -122,31 +122,31 @@ class PDO {
       // Try Redis
       const cached = await this.redis.get(key);
       if (cached) {
-        console.log(
-          `🟢 Data retrieved from Redis cache for procedure key: ${key}`
-        );
+        // console.log(
+        //   `🟢 Data retrieved from Redis cache for procedure key: ${key}`
+        // );
         return JSON.parse(cached);
       }
     }
-
-    console.log(`🛠️ Calling stored procedure: ${procName}`);
+// 
+    // console.log(`🛠️ Calling stored procedure: ${procName}`);
     const request = this.pool.request();
 
     for (const param of inputParams) {
-      console.log(`➡️ Input: ${param.name} = ${param.value}`);
+      // console.log(`➡️ Input: ${param.name} = ${param.value}`);
       request.input(param.name, param.type, param.value);
     }
 
     for (const param of outputParams) {
-      console.log(`⬅️ Output: ${param.name}`);
+      // console.log(`⬅️ Output: ${param.name}`);
       request.output(param.name, param.type);
     }
 
     const result = await request.execute(procName);
 
-    console.log(`✅ Procedure ${procName} executed.`);
+    // console.log(`✅ Procedure ${procName} executed.`);
     if (result.output) {
-      console.log("🔁 Output values:", result.output);
+      // console.log("🔁 Output values:", result.output);
     }
 
     const response = {
@@ -156,9 +156,9 @@ class PDO {
 
     // Cache the result in Redis
     if (this.redis && key) {
-      console.log(
+      // console.log(
         `📝 Caching procedure result in Redis with key: ${key} (TTL: ${ttl}s)`
-      );
+      // );
       await this.redis.set(key, JSON.stringify(response), { EX: ttl });
     }
 

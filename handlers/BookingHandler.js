@@ -33,11 +33,21 @@ class BookingHandler extends WebSocketHandler {
 
   async create() {
     this.requireAuth();
+    const body = this.body;
+
+    // Convert postJsonData to string here
+    if (body.postJsonData && typeof body.postJsonData === "object") {
+      body.postJsonData = JSON.stringify(body.postJsonData);
+    }
+
     const params = {
-      ...this.body,
+      ...body,
       company_id: this._user.company_id,
       user_id: this._user.Id,
     };
+
+    // console.log("params.postJsonData (string):", params.postJsonData); // ✅ Now a string
+
     const result = await createBookingDetails(params);
     if (result.status != 1) {
       this.send({
@@ -46,14 +56,12 @@ class BookingHandler extends WebSocketHandler {
         ...result,
       });
     }
-    this.log(result)
+    this.log(result);
     this.send({
       for: "bookingTableData",
       ...result,
     });
   }
-
-
 }
 
 module.exports = new BookingHandler();
