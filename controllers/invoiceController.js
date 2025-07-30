@@ -43,3 +43,46 @@ exports.getInvoiceAdjustmentDetails = async (params) => {
     total: output.TotalCount,
   };
 };
+
+exports.getBookingInvoiceEntryList = async (params) => {
+  const {
+    page = 1,
+    pageSize = 10,
+    from_date = null,
+    to_date = null,
+    Party = '',
+    Project = '',
+    City = '',
+    user_id,
+    company_id,
+  } = params;
+
+  const pdo = new PDO(); // Your DB helper instance
+
+  const { data, output } = await pdo.callProcedure({
+    procName: "sp_get_list_booking_invoice_entry",
+    inputParams: [
+      { name: "PageNo", type: sql.Int, value: page },
+      { name: "PageSize", type: sql.Int, value: pageSize },
+      { name: "from_date", type: sql.VarChar(200), value: from_date },
+      { name: "to_date", type: sql.VarChar(200), value: to_date },
+      { name: "Party", type: sql.NVarChar(50), value: Party },
+      { name: "Project", type: sql.NVarChar(50), value: Project },
+      { name: "City", type: sql.NVarChar(50), value: City },
+      { name: "user_id", type: sql.Int, value: user_id },
+      { name: "company_id", type: sql.Int, value: company_id },
+    ],
+    outputParams: [
+      { name: "StatusID", type: sql.Int },
+      { name: "StatusMessage", type: sql.VarChar(200) },
+      { name: "TotalCount", type: sql.Int },
+    ],
+  });
+
+  return {
+    data,
+    status: output.StatusID,
+    message: output.StatusMessage,
+    total: output.TotalCount,
+  };
+};
