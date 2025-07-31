@@ -213,3 +213,30 @@ exports.getAllCompanyDropdown = async (params) => {
     TotalCount: output.TotalCount
   };
 }
+
+exports.getAllVendorDropdown = async (params) => {
+  const {
+    user_id,
+    company_id,
+  } = params;
+  const pdo = new PDO();
+  const { data, output } = await pdo.callProcedure({
+    procName: "sp_get_list_vendor_mast_dropdown",
+    inputParams: [
+      { name: "user_id", type: sql.Int, value: user_id },
+      { name: "company_id", type: sql.Int, value: company_id },
+    ],
+    outputParams: [
+      { name: "StatusID", type: sql.Int },
+      { name: "StatusMessage", type: sql.VarChar(200) },
+      { name: "TotalCount", type: sql.Int },
+    ],
+  });
+
+  return {
+    data: data,
+    StatusID: output.StatusID,
+    StatusMessage: output.StatusMessage,
+    TotalCount: output.TotalCount
+  };
+}
