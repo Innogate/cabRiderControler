@@ -478,7 +478,6 @@ async createUpdatePartyRateMaster() {
     }
   }
 
-
   async createUpdateMonthlyDutyMaster() {
     this.requireAuth();
     const params = {
