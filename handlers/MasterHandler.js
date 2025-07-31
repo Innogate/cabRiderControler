@@ -418,7 +418,6 @@ class MasterHandler extends WebSocketHandler {
     }
   }
 
-
   async createUpdateMonthlyDutyMaster() {
     this.requireAuth();
     const params = {
