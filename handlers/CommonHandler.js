@@ -9,6 +9,7 @@ const {
   gatAllBranchListDropdown,
   getAllPartyDropDown,
   getAllPartyRateByCityDropdown,
+  getAllCompanyDropdown,
 } = require("../controllers/comonApiController");
 
 class CommonHandler extends WebSocketHandler {
@@ -148,6 +149,28 @@ class CommonHandler extends WebSocketHandler {
       });
     }
   }
+
+  async getAllCompany() {
+    this.requireAuth();
+    const params = {
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await getAllCompanyDropdown(params);
+    if (result?.data) {
+      this.send({
+        for: "getAllCompanyDropdown",
+        ...result,
+      });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
 
 }
 
