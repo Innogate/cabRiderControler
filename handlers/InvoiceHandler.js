@@ -33,14 +33,15 @@ class InvoiceHandler extends WebSocketHandler {
     });
   }
 
-  getBookings(){
+  async getBookings(){
     this.requireAuth();
     const params = {
       ...this.body,
       company_id: this._user.company_id,
       user_id: this._user.Id,
     };
-    const result = getBookingInvoiceEntryList(params);
+    console.log("Innput is : ",params)
+    const result = await getBookingInvoiceEntryList(params);
     if (result.status != 1) {
       this.send({
         msg: "Something went wrong please try again later",
@@ -52,6 +53,7 @@ class InvoiceHandler extends WebSocketHandler {
       for: "bookingInvoiceEntryList",
       ...result,
     });
+    console.log("output is",result)
   }
 }
 

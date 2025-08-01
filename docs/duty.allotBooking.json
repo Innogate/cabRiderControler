@@ -1,0 +1,19 @@
+{
+    "command": "duty.allotBooking",
+    "body":{
+            "id": 0,
+            "CarType": "Sedan",
+            "CarNo": "MH12AB1234",
+            "DriverName": "Ramesh Yadav",
+            "DriverContact": "9876543210",
+            "VendorContact": "9123456780",
+            "VendorName": "Rajesh Travels",
+            "GarageOutTime": "2025-07-31 10:00:00",
+            "VendorGarageOutTime": "2025-07-31 09:30:00",
+            "VendorAdvanced": 1500.00,
+            "driver_id": 7,
+            "user_id": 101,
+            "company_id": 5
+}
+
+}
