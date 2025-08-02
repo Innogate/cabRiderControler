@@ -1,0 +1,8 @@
+{
+    "command": "minvoice.getMonthlyBookingList",
+    "body":{
+        "party_id":"1",
+        "branch_id":"1",
+        "from_city_id": "1"
+    }
+}
