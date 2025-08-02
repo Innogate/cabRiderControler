@@ -28,7 +28,17 @@ services:
     volumes:
       - ./db/redis:/data
     restart: unless-stopped
-
+  
+  sqlpad:
+    image: sqlpad/sqlpad:latest
+    container_name: sqlpad.${PROJECT_NAME}.${PROJECT_DOMAIN}
+    environment:
+      - SQLPAD_ADMIN=test@email.com
+      - SQLPAD_ADMIN_PASSWORD=admin123
+      - SQLPAD_APP_LOG_LEVEL=debug
+      - SQLPAD_WEBHOOK_ENABLED=false
+      - SQLPAD_DISABLE_TELEMETRY=true
+    restart: unless-stopped
 volumes:
   dotfiles:
     external: true
