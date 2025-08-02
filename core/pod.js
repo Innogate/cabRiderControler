@@ -59,35 +59,37 @@ class PDO {
    * @param {string} options.sqlQuery - SQL string to execute
    * @param {number} options.ttl - Time to live in Redis (in seconds)
    */
-  async execute({ sqlQuery = "", ttl = 120 }) {
+  async execute({ sqlQuery = "", params = {}, ttl = 120 }) {
     if (!this.pool || (process.env.USE_REDIS === "true" && !this.redis)) {
       await this.connect();
     }
 
-    // Auto-generate Redis key based on query string
-    const key = this.redis ? `sql:${sqlQuery.replace(/\s+/g, " ")}` : null;
+    const key = this.redis
+      ? `sql:${sqlQuery.replace(/\s+/g, " ")}:${JSON.stringify(params)}`
+      : null;
 
     if (this.redis && key) {
       const cached = await this.redis.get(key);
-      if (cached) {
-        // console.log(`🟢 Data retrieved from Redis cache for SQL key: ${key}`);
-        return JSON.parse(cached);
-      }
+      if (cached) return JSON.parse(cached);
     }
 
-    // console.log("🟡 Executing SQL query from DB...");
-    const result = await this.pool.request().query(sqlQuery);
+    const request = this.pool.request();
+
+    // Bind all parameters
+    for (const [key, value] of Object.entries(params)) {
+      request.input(key, value);
+    }
+
+    const result = await request.query(sqlQuery);
     const data = result.recordset;
 
     if (this.redis && key) {
-      // console.log(
-      //   `📝 Caching SQL result in Redis with key: ${key} (TTL: ${ttl}s)`
-      // );
       await this.redis.set(key, JSON.stringify(data), { EX: ttl });
     }
 
     return data;
   }
+
 
   /**
    * Execute a stored procedure with in/out parameters, optionally cache result
@@ -128,7 +130,7 @@ class PDO {
         return JSON.parse(cached);
       }
     }
-// 
+    // 
     // console.log(`🛠️ Calling stored procedure: ${procName}`);
     const request = this.pool.request();
 
@@ -157,7 +159,7 @@ class PDO {
     // Cache the result in Redis
     if (this.redis && key) {
       // console.log(
-        `📝 Caching procedure result in Redis with key: ${key} (TTL: ${ttl}s)`
+      `📝 Caching procedure result in Redis with key: ${key} (TTL: ${ttl}s)`
       // );
       await this.redis.set(key, JSON.stringify(response), { EX: ttl });
     }
