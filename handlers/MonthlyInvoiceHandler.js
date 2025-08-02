@@ -8,21 +8,25 @@ class MInvoiceHandler extends WebSocketHandler {
     this.publicCommands = [];
   }
 
-  async getMonthlySetupCode(){
-    this.requireAuth();
-    const result = await getDutySetupCode(this.body);
-    if (result) {
-      this.send({
-        type: "success",
-        msg: "Booking details retrieved successfully",
-        data: result,
-      });
-    } else {
-      this.send({
-        type: "error",
-        msg: "Failed to retrieve Dusty Setup details",
-      });
-    }
+ async getMonthlySetupCode() {
+  this.requireAuth();
+  const result = await getDutySetupCode(this.body);
+
+  if (result) {
+    this.send({
+      type: "success",
+      for: "minvoice.getMonthlySetupCode",  // ✅ Add this line
+      msg: "Booking details retrieved successfully",
+      data: result,
+    });
+  } else {
+    this.send({
+      type: "error",
+      for: "minvoice.getMonthlySetupCode",  // ✅ Add here too (optional but consistent)
+      msg: "Failed to retrieve Duty Setup details",
+    });
   }
+}
+
 }
 module.exports = new MInvoiceHandler();
