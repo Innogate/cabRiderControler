@@ -15,14 +15,14 @@ class MInvoiceHandler extends WebSocketHandler {
     if (result) {
       this.send({
         type: "success",
-        for: "minvoice.getMonthlySetupCode",  // ✅ Add this line
+        for: "minvoice.getMonthlySetupCode",
         msg: "Booking details retrieved successfully",
         data: result,
       });
     } else {
       this.send({
         type: "error",
-        for: "minvoice.getMonthlySetupCode",  // ✅ Add here too (optional but consistent)
+        for: "minvoice.getMonthlySetupCode",
         msg: "Failed to retrieve Duty Setup details",
       });
     }
@@ -31,7 +31,7 @@ class MInvoiceHandler extends WebSocketHandler {
   async getMonthlyBookingList() {
     this.requireAuth();
     const params = {
-      company_id: this._user.company_id,
+      // company_id: this._user.company_id,
       ...this.body
     }
     const result = await getMBookingList(this.body);
