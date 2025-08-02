@@ -1,6 +1,6 @@
 const WebSocketHandler = require("../core/WebSocketHandler");
 const jwt = require("../core/jwt");
-const { getDutySetupCode } = require("../controllers/MonthlyInvoiceController");
+const { getDutySetupCode, getMBookingList } = require("../controllers/MonthlyInvoiceController");
 
 class MInvoiceHandler extends WebSocketHandler {
   constructor() {
@@ -8,25 +8,50 @@ class MInvoiceHandler extends WebSocketHandler {
     this.publicCommands = [];
   }
 
- async getMonthlySetupCode() {
-  this.requireAuth();
-  const result = await getDutySetupCode(this.body);
+  async getMonthlySetupCode() {
+    this.requireAuth();
+    const result = await getDutySetupCode(this.body);
 
-  if (result) {
-    this.send({
-      type: "success",
-      for: "minvoice.getMonthlySetupCode",  // ✅ Add this line
-      msg: "Booking details retrieved successfully",
-      data: result,
-    });
-  } else {
-    this.send({
-      type: "error",
-      for: "minvoice.getMonthlySetupCode",  // ✅ Add here too (optional but consistent)
-      msg: "Failed to retrieve Duty Setup details",
-    });
+    if (result) {
+      this.send({
+        type: "success",
+        for: "minvoice.getMonthlySetupCode",  // ✅ Add this line
+        msg: "Booking details retrieved successfully",
+        data: result,
+      });
+    } else {
+      this.send({
+        type: "error",
+        for: "minvoice.getMonthlySetupCode",  // ✅ Add here too (optional but consistent)
+        msg: "Failed to retrieve Duty Setup details",
+      });
+    }
   }
-}
+
+  async getMonthlyBookingList() {
+    this.requireAuth();
+    const params = {
+      company_id: this._user.company_id,
+      ...this.body
+    }
+    const result = await getMBookingList(this.body);
+
+    if (result) {
+      this.send({
+        type: "success",
+        for: "minvoice.getMonthlyBookingList",
+        msg: "Booking details retrieved successfully",
+        data: result,
+      });
+    } else {
+      this.send({
+        type: "error",
+        for: "minvoice.getMonthlyBookingList",
+        msg: "Failed to retrieve Duty Setup details",
+      });
+    }
+  }
+
 
 }
 module.exports = new MInvoiceHandler();
