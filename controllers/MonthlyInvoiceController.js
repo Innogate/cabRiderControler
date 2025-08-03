@@ -12,6 +12,7 @@ exports.getDutySetupCode = async (params) => {
 
 
 exports.getMBookingList = async (params) => {
+    console.log(params)
     const {
         party_id = 0,
         from_city_id = 0,
@@ -23,7 +24,7 @@ exports.getMBookingList = async (params) => {
         sqlQuery: `
     SELECT * 
     FROM dbo.booking_details bd 
-    WHERE bd.Party = @Party 
+    WHERE bd.Party = @party_id 
       AND bd.branch_id = @branch_id
       AND bd.FromCityID = @from_city_id 
       AND bd.company_id = @company_id 
@@ -35,7 +36,7 @@ exports.getMBookingList = async (params) => {
       );
   `,
         params: {
-            Party: party_id,
+            party_id: party_id,
             branch_id: branch_id,
             company_id: company_id,
             from_city_id: from_city_id
