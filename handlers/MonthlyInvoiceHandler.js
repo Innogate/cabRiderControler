@@ -1,6 +1,6 @@
 const WebSocketHandler = require("../core/WebSocketHandler");
 const jwt = require("../core/jwt");
-const { getDutySetupCode, getMBookingList,getAllBranch, getAllCompany } = require("../controllers/MonthlyInvoiceController");
+const { getDutySetupCode, getMBookingList } = require("../controllers/MonthlyInvoiceController");
 
 class MInvoiceHandler extends WebSocketHandler {
   constructor() {
@@ -23,48 +23,6 @@ class MInvoiceHandler extends WebSocketHandler {
       this.send({
         type: "error",
         for: "minvoice.getMonthlySetupCode",
-        msg: "Failed to retrieve Duty Setup details",
-      });
-    }
-  }
-
-  async getAllBranchDropdown() {
-    this.requireAuth();
-    const result = await getAllBranch(this.body);
-
-    if (result) {
-      this.send({
-        type: "success",
-        for: "getAllBranchDropdown",
-        msg: "Booking details retrieved successfully",
-        data: result,
-      });
-    } else {
-      this.send({
-        type: "error",
-        for: "getAllBranchDropdown",
-        msg: "Failed to retrieve Duty Setup details",
-      });
-    }
-  }
-
-
-
-  async getAllCompanyDropdown() {
-    this.requireAuth();
-    const result = await getAllCompany(this.body);
-
-    if (result) {
-      this.send({
-        type: "success",
-        for: "getAllCompanyDropdown",
-        msg: "Booking details retrieved successfully",
-        data: result,
-      });
-    } else {
-      this.send({
-        type: "error",
-        for: "getAllCompanyDropdown",
         msg: "Failed to retrieve Duty Setup details",
       });
     }
