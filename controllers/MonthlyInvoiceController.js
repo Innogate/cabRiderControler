@@ -10,6 +10,26 @@ exports.getDutySetupCode = async (params) => {
     return result;
 }
 
+exports.getAllBranch= async (params) => {
+    const pdo = new PDO();
+    const result = await pdo.execute({
+        sqlQuery: "select Id, branch_name from dbo.tbl_branch WHERE branch_name!= '';",
+        ttl: 300,
+    });
+    return result;
+}
+
+
+exports.getAllCompany= async (params) => {
+    const pdo = new PDO();
+    const result = await pdo.execute({
+        sqlQuery: "select Id, Name from dbo.tbl_company WHERE Name!= '';",
+        ttl: 300,
+    });
+    return result;
+}
+
+
 exports.getMBookingList = async (params) => {
     const {
         party_id = 0,
