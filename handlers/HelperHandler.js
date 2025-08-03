@@ -9,7 +9,7 @@ class HelperHandler extends WebSocketHandler {
 
     async getPartyDropdown() {
         this.requireAuth();
-        let result = getPartyListDropdown();
+        let result = await getPartyListDropdown();
         if (!result || result.length == 0) {
             result = [];
         }

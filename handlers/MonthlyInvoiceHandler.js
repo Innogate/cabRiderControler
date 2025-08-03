@@ -31,10 +31,9 @@ class MInvoiceHandler extends WebSocketHandler {
   async getMonthlyBookingList() {
     this.requireAuth();
     const params = {
-      // company_id: this._user.company_id,
       ...this.body
     }
-    const result = await getMBookingList(this.body);
+    const result = await getMBookingList(params);
 
     if (result) {
       this.send({
