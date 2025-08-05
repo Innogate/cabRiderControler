@@ -8,6 +8,7 @@ class MInvoiceHandler extends WebSocketHandler {
     this.publicCommands = [];
   }
 
+
   async getMonthlySetupCode() {
     this.requireAuth();
     const result = await getDutySetupCode(this.body);
@@ -50,6 +51,25 @@ class MInvoiceHandler extends WebSocketHandler {
       });
     }
   }
+
+
+  async createMonthlyBilling() {
+  this.requireAuth();
+
+  const payload = {
+    ...this.body 
+  };
+  console.log(" Received billing payload:", payload);
+  this.send({
+    type: "success",
+    for: "minvoice.createMonthlyBilling",
+    msg: "Billing form created successfully",
+    data: payload, 
+  });
+}
+
+
+
 
 
 }
