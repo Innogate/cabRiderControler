@@ -4,7 +4,7 @@ services:
     container_name: api.${PROJECT_NAME}.${PROJECT_DOMAIN}
     volumes:
       - .:/app
-      - dotfiles:/home/vscode
+      - ./dotfiles:/home/vscode
     environment:
       - PRODUCTION=${PRODUCTION}
       - VERSION=${VERSION}
@@ -39,6 +39,3 @@ services:
       - SQLPAD_WEBHOOK_ENABLED=false
       - SQLPAD_DISABLE_TELEMETRY=true
     restart: unless-stopped
-volumes:
-  dotfiles:
-    external: true
