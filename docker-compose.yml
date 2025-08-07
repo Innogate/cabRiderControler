@@ -4,7 +4,7 @@ services:
     container_name: api.${PROJECT_NAME}.${PROJECT_DOMAIN}
     volumes:
       - .:/app
-      - ./dotfiles:/home/vscode
+      # - ./dotfiles:/home/vscode
     environment:
       - PRODUCTION=${PRODUCTION}
       - VERSION=${VERSION}
@@ -19,7 +19,7 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
     user: vscode
-    command: bash start.sh
+    # command: bash start.sh
     restart: unless-stopped
 
   redis:
