@@ -19,7 +19,7 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
     user: vscode
-    # command: bash start.sh
+    command: bash start.sh
     restart: unless-stopped
 
   redis:
@@ -27,15 +27,4 @@ services:
     container_name: redis.${PROJECT_NAME}.${PROJECT_DOMAIN}
     volumes:
       - ./db/redis:/data
-    restart: unless-stopped
-  
-  sqlpad:
-    image: sqlpad/sqlpad:latest
-    container_name: sqlpad.${PROJECT_NAME}.${PROJECT_DOMAIN}
-    environment:
-      - SQLPAD_ADMIN=test@email.com
-      - SQLPAD_ADMIN_PASSWORD=admin123
-      - SQLPAD_APP_LOG_LEVEL=debug
-      - SQLPAD_WEBHOOK_ENABLED=false
-      - SQLPAD_DISABLE_TELEMETRY=true
     restart: unless-stopped
