@@ -28,10 +28,3 @@ services:
     volumes:
       - ./db/redis:/data
     restart: unless-stopped
-<<<<<<< HEAD
-=======
-  
-volumes:
-  dotfiles:
-    external: true
->>>>>>> 6372cbf (Fix all duplicate error)
