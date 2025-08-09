@@ -19,7 +19,8 @@ const {
   gatAllDriverSalarySetupList,
 } = require("../controllers/driverSalarySetupMasterController");
 const {
-  gatAllPartyRateList,
+  getAllPartyRateList,
+  createUpdatePartyRate,
 } = require("../controllers/partyRateMasterController");
 const {
   gatAllPartyMaster,
@@ -234,14 +235,14 @@ class MasterHandler extends WebSocketHandler {
     }
   }
 
-  async gatAllPartyRate() {
+  async getAllPartyRate() {
     this.requireAuth();
     const params = {
       ...this.body,
       company_id: this._user.company_id,
       user_id: this._user.Id,
     };
-    const result = await gatAllPartyRateList(params);
+    const result = await getAllPartyRateList(params);
     if (result) {
       this.send({
         for: "getallpartyrate",
@@ -255,6 +256,35 @@ class MasterHandler extends WebSocketHandler {
       });
     }
   }
+
+async createUpdatePartyRateMaster() {
+  this.requireAuth();
+
+  const params = {
+    ...this.body,
+    postJsonData: JSON.stringify(this.body.postJsonData), // 👈 serialize it
+    company_id: this._user.company_id,
+    user_id: this._user.Id
+  }
+
+  console.log("params", params);
+
+  const result = await createUpdatePartyRate(params);
+  console.log("result", result);
+
+  if (result) {
+    this.broadcastTo({
+      for: "createUpdatePartyRate",
+      ...result
+    }, { company_id: this._user.company_id });
+  } else {
+    this.send({
+      StatusMessage: "Failed to add data",
+      data: result.data
+    });
+  }
+}
+
 
   async gatAllParty() {
     this.requireAuth();
@@ -422,6 +452,10 @@ class MasterHandler extends WebSocketHandler {
     }
   }
 
+
+
+
+  
   async getAllMonthlyDutyMaster() {
     this.requireAuth();
     const params = {
