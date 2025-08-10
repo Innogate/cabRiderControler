@@ -26,10 +26,14 @@ const {
   gatAllPartyMaster,
   createUpdateParty,
 } = require("../controllers/partyMasterController");
-const { gateAllVendor, createUpdateVendorMaster } = require("../controllers/vendorMasterController");
-const { gateAllGuest } = require("../controllers/guestMasterController");
+const { gateAllVendor } = require("../controllers/vendorMasterController");
+const { gateAllGuest, createUpdateGuest, updateGuest } = require("../controllers/guestMasterController");
 const { getAllUserList, createUpdateUser } = require("../controllers/userMasterController")
 const { getAllMonthlyDuty, createUpdateMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
+const { gateAllGuest, updateGuest, createGuest } = require("../controllers/guestMasterController");
+const { getAllGuest, updateGuest, createGuest } = require("../controllers/guestMasterController");
+const { getAllUserList } = require("../controllers/userMasterController")
+const { getAllMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
 
 class MasterHandler extends WebSocketHandler {
   constructor() {
@@ -388,7 +392,7 @@ async createUpdatePartyRateMaster() {
       company_id: this._user.company_id,
       user_id: this._user.Id,
     };
-    const result = await gateAllGuest(params);
+    const result = await getAllGuest(params);
     if (result) {
       this.send({
         for: "getallguest",
@@ -478,27 +482,50 @@ async createUpdatePartyRateMaster() {
     }
   }
 
-  async createUpdateMonthlyDutyMaster() {
+  async createGuestMaster() {
     this.requireAuth();
     const params = {
       ...this.body,
       company_id: this._user.company_id,
       user_id: this._user.Id,
     };
-    const result = await createUpdateMonthlyDuty(params);
+    const result = await createGuest(params);
     if (result) {
       this.broadcastTo({
-        for: "createUpdateMonthlyDuty",
+        for: "createUpdateGuest",
+        ...result,
+      }, { company_id: this._user.company_id })
+    } else {
+      this.send({
+        msg: result.StatusMessage,
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+
+  async updateGuestMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await updateGuest(params);
+    if (result.StatusID === 1) {
+      this.broadcastTo({
+        for: "UpdateGuest",
         ...result,
       }, { company_id: this._user.company_id })
     } else {
       this.send({
         StatusMessage: result.StatusMessage,
+        StatusID: result.StatusID,
         data: result.data,
       });
     }
   }
-
 
 }
 
