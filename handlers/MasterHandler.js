@@ -478,6 +478,28 @@ async createUpdatePartyRateMaster() {
     }
   }
 
+
+    async createUpdateMonthlyDutyMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await createUpdateMonthlyDuty(params);
+    if (result) {
+      this.broadcastTo({
+        for: "createUpdateMonthlyDuty",
+        ...result,
+      }, { company_id: this._user.company_id })
+    } else {
+      this.send({
+        StatusMessage: result.StatusMessage,
+        data: result.data,
+      });
+    }
+  }
+
   async createGuestMaster() {
     this.requireAuth();
     const params = {
