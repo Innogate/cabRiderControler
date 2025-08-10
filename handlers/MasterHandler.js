@@ -27,13 +27,9 @@ const {
   createUpdateParty,
 } = require("../controllers/partyMasterController");
 const { gateAllVendor } = require("../controllers/vendorMasterController");
-const { gateAllGuest, createUpdateGuest, updateGuest } = require("../controllers/guestMasterController");
 const { getAllUserList, createUpdateUser } = require("../controllers/userMasterController")
 const { getAllMonthlyDuty, createUpdateMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
-const { gateAllGuest, updateGuest, createGuest } = require("../controllers/guestMasterController");
 const { getAllGuest, updateGuest, createGuest } = require("../controllers/guestMasterController");
-const { getAllUserList } = require("../controllers/userMasterController")
-const { getAllMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
 
 class MasterHandler extends WebSocketHandler {
   constructor() {
