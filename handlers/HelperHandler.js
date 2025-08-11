@@ -41,8 +41,7 @@ class HelperHandler extends WebSocketHandler {
     async getCompanyDropdown() {
         this.requireAuth();
         let result = await getCompanyDropdownList(
-            this._user.company_id,
-            this._user.Id
+            this.body.company_id
         );
 
         if (!result || result.length == 0) {
