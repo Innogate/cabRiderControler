@@ -5,7 +5,7 @@ const PDO = require("../core/pod.js");
 exports.getPartyListDropdown = async () => {
     const pdo = new PDO();
     const result = await pdo.execute({
-        sqlQuery: `select TOP 100  id, party_name FROM dbo.party_mast WHERE party_name != '' ORDER BY party_name ASC`
+        sqlQuery: `select id, party_name FROM dbo.party_mast WHERE party_name != '' ORDER BY party_name ASC`
     });
 
     return result;
@@ -30,7 +30,7 @@ exports.getCompanyDropdownList = async (
 ) => {
     const pdo = new PDO();
     const result = await pdo.execute({
-        sqlQuery: "SELECT Id, CASE WHEN ISNULL(Name, '') = '' AND ISNULL(ShortName, '') = '' AND ISNULL(City, '') = '' THEN 'N/A' ELSE ISNULL(Name, '') + ' / ' + ISNULL(ShortName, '') + ' / ' + ISNULL(City, '') END AS Name FROM dbo.tbl_company where (user_id  = "+user_id+" OR company_id = "+company_id+");",
+        sqlQuery: "SELECT Id, CASE WHEN ISNULL(Name, '') = '' AND ISNULL(ShortName, '') = '' AND ISNULL(City, '') = '' THEN 'N/A' ELSE ISNULL(Name, '') + ' / ' + ISNULL(ShortName, '') + ' / ' + ISNULL(City, '') END AS Name FROM dbo.tbl_company where (ID  = "+company_id+" OR company_id = "+company_id+");",
         ttl: 300,
     });
     return result;
