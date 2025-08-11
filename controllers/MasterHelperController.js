@@ -2,13 +2,10 @@ const sql = require("mssql");
 const PDO = require("../core/pod.js");
 
 // GIVING ALL PARTY MASTER AS DROPDOWN OPTION
-exports.getPartyListDropdown = async (
-    company_id,
-    user_id
-) => {
+exports.getPartyListDropdown = async () => {
     const pdo = new PDO();
     const result = await pdo.execute({
-        sqlQuery: `select TOP 100  id, party_name FROM dbo.party_mast WHERE party_name != '' AND  (user_id  = ${user_id} OR company_id = ${company_id}) ORDER BY party_name ASC`
+        sqlQuery: `select TOP 100  id, party_name FROM dbo.party_mast WHERE party_name != '' ORDER BY party_name ASC`
     });
 
     return result;

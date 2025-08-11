@@ -9,10 +9,7 @@ class HelperHandler extends WebSocketHandler {
 
     async getPartyDropdown() {
         this.requireAuth();
-        let result = await getPartyListDropdown(
-            this._user.company_id,
-            this._user.Id
-        );
+        let result = await getPartyListDropdown();
         if (!result || result.length == 0) {
             result = [];
         }
@@ -22,8 +19,7 @@ class HelperHandler extends WebSocketHandler {
     async getBranchDropdown() {
         this.requireAuth();
         let result = await getBranchDropdownList(
-            this._user.company_id,
-            this._user.Id
+             this.body.company_id
         );
 
         if (!result || result.length == 0) {
@@ -41,7 +37,8 @@ class HelperHandler extends WebSocketHandler {
     async getCompanyDropdown() {
         this.requireAuth();
         let result = await getCompanyDropdownList(
-            this.body.company_id
+            this._user.company_id,
+            this._user.Id
         );
 
         if (!result || result.length == 0) {
