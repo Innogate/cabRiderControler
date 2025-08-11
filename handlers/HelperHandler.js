@@ -1,5 +1,5 @@
 const WebSocketHandler = require("../core/WebSocketHandler.js");
-const { getPartyListDropdown, getBranchDropdownList, getCompanyDropdownList } = require("../controllers/MasterHelperController.js");
+const { getPartyListDropdown, getBranchDropdownList, getCompanyDropdownList, getPartyMasterById, getOtherCharges } = require("../controllers/MasterHelperController.js");
 
 class HelperHandler extends WebSocketHandler {
     constructor() {
@@ -19,7 +19,7 @@ class HelperHandler extends WebSocketHandler {
     async getBranchDropdown() {
         this.requireAuth();
         let result = await getBranchDropdownList(
-             this.body.company_id
+            this.body.company_id
         );
 
         if (!result || result.length == 0) {
@@ -46,6 +46,30 @@ class HelperHandler extends WebSocketHandler {
         }
         this.send({
             for: "companyDropdown",
+            data: result,
+        });
+    }
+
+    async getPartyById() {
+        this.requireAuth();
+        const params = {
+            ...this.body,
+        };
+        const result = await getPartyMasterById(params);
+        this.send({
+            for: "getPartyById",
+            data: result[0],
+        });
+    }
+
+    async getOtherChargesForBookingList(){
+        this.requireAuth();
+        const params = {
+            ...this.body,
+        };
+        const result = await getOtherCharges(params);
+        this.send({
+            for: "getOtherChargesForBookingList",
             data: result,
         });
     }

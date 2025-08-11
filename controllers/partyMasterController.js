@@ -46,7 +46,7 @@ exports.createUpdateParty = async (params) => {
     address = '',
     city_id = 0,
     pin_code = '',
-    mobileno = '', 
+    mobileno = '',
     whatsappno = '',
     gstno = '',
     panno = '',
@@ -109,7 +109,7 @@ exports.createUpdateParty = async (params) => {
       { name: "TotalCount", type: sql.Int },
     ],
   })
-  
+
   return {
     data: data,
     StatusID: output.StatusID,

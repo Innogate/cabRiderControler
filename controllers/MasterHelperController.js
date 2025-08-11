@@ -13,11 +13,11 @@ exports.getPartyListDropdown = async () => {
 
 
 exports.getBranchDropdownList = async (
-    company_id=0
+    company_id = 0
 ) => {
     const pdo = new PDO();
     const result = await pdo.execute({
-        sqlQuery: "SELECT id, CASE WHEN ISNULL(branch_name, '') = '' AND ISNULL(ShortName, '') = '' AND ISNULL([address], '') = '' THEN 'N/A' ELSE ISNULL(NULLIF(branch_name, ''), 'Branch N/A') + ' / ' + ISNULL(NULLIF(ShortName, ''), 'ShortName N/A') + ' / ' + ISNULL(NULLIF([address], ''), 'Address N/A') END AS branch_name FROM dbo.tbl_branch WHERE  company_id = "+company_id+" ORDER BY branch_name ASC;",
+        sqlQuery: "SELECT id, branch_name FROM dbo.tbl_branch WHERE  company_id = " + company_id + " ORDER BY branch_name ASC;",
         ttl: 300,
     });
     return result;
@@ -30,8 +30,90 @@ exports.getCompanyDropdownList = async (
 ) => {
     const pdo = new PDO();
     const result = await pdo.execute({
-        sqlQuery: "SELECT Id, CASE WHEN ISNULL(Name, '') = '' AND ISNULL(ShortName, '') = '' AND ISNULL(City, '') = '' THEN 'N/A' ELSE ISNULL(Name, '') + ' / ' + ISNULL(ShortName, '') + ' / ' + ISNULL(City, '') END AS Name FROM dbo.tbl_company where (ID  = "+company_id+" OR company_id = "+company_id+");",
+        sqlQuery: "SELECT Id, ShortName AS Name FROM dbo.tbl_company where (ID  = " + company_id + " OR company_id = " + company_id + ");",
         ttl: 300,
     });
     return result;
+}
+
+exports.getOtherCharges = async (params) => {
+  const { booking_ids } = params;
+  const pdo = new PDO();
+
+  if (!Array.isArray(booking_ids) || booking_ids.length === 0) {
+    throw new Error("booking_ids must be a non-empty array");
+  }
+
+  const paramNames = booking_ids.map((_, index) => `@id${index}`);
+  const inClause = paramNames.join(", ");
+  const sqlParams = {};
+  booking_ids.forEach((id, index) => {
+    sqlParams[`id${index}`] = id;
+  });
+
+  // 🔹 Query for taxable
+  const sqlTaxable = `
+    SELECT 
+      charges_mast.id AS charge_id,
+      charges_mast.charge_name,
+      charges_mast.taxable,
+      charges_mast.CreatedOn,
+      charges_mast.user_id,
+      charges_mast.company_id,
+      charges_mast.TallyName,
+      tbl_booking_charge_summery.id AS booking_charge_id,
+      tbl_booking_charge_summery.BookingId,
+      tbl_booking_charge_summery.Amount,
+      tbl_booking_charge_summery.charge_type,
+      tbl_booking_charge_summery.imgPath
+    FROM charges_mast
+    JOIN tbl_booking_charge_summery 
+      ON charges_mast.id = tbl_booking_charge_summery.ChargeId
+    WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
+      AND charges_mast.taxable = 'Y'
+  `;
+
+  // 🔹 Query for non-taxable
+  const sqlNonTaxable = `
+    SELECT 
+      charges_mast.id AS charge_id,
+      charges_mast.charge_name,
+      charges_mast.taxable,
+      charges_mast.CreatedOn,
+      charges_mast.user_id,
+      charges_mast.company_id,
+      charges_mast.TallyName,
+      tbl_booking_charge_summery.id AS booking_charge_id,
+      tbl_booking_charge_summery.BookingId,
+      tbl_booking_charge_summery.Amount,
+      tbl_booking_charge_summery.charge_type,
+      tbl_booking_charge_summery.imgPath
+    FROM charges_mast
+    JOIN tbl_booking_charge_summery 
+      ON charges_mast.id = tbl_booking_charge_summery.ChargeId
+    WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
+      AND charges_mast.taxable = 'N'
+  `;
+
+  // 🔹 Execute both
+  const [taxable, nonTaxable] = await Promise.all([
+    pdo.execute({ sqlQuery: sqlTaxable, params: sqlParams, ttl: 300 }),
+    pdo.execute({ sqlQuery: sqlNonTaxable, params: sqlParams, ttl: 300 }),
+  ]);
+
+  // 🔹 Return clean JS object
+  return {
+    taxable,
+    nonTaxable,
+  };
+};
+
+
+exports.getPartyMasterById = async (params) => {
+  const { party_id = 0 } = params;
+  const pdo = new PDO();
+  return pdo.execute({
+    sqlQuery: `SELECT * FROM party_mast WHERE id = ${party_id}`,
+    ttl: 300,
+  });
 }
