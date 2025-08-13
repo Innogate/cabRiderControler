@@ -118,7 +118,6 @@ class MasterHandler extends WebSocketHandler {
     const params = {
       ...this.body,
     };
-
     const result = await deleteCartype(params);
     if (result) {
       this.send({ msg: "Delete Data", type: "success" });
