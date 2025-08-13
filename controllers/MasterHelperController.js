@@ -54,45 +54,43 @@ exports.getOtherCharges = async (params) => {
   // 🔹 Query for taxable
   const sqlTaxable = `
     SELECT 
-      charges_mast.id AS charge_id,
-      charges_mast.charge_name,
-      charges_mast.taxable,
-      charges_mast.CreatedOn,
-      charges_mast.user_id,
-      charges_mast.company_id,
-      charges_mast.TallyName,
-      tbl_booking_charge_summery.id AS booking_charge_id,
-      tbl_booking_charge_summery.BookingId,
-      tbl_booking_charge_summery.Amount,
-      tbl_booking_charge_summery.charge_type,
-      tbl_booking_charge_summery.imgPath
-    FROM charges_mast
-    JOIN tbl_booking_charge_summery 
-      ON charges_mast.id = tbl_booking_charge_summery.ChargeId
-    WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
-      AND charges_mast.taxable = 'Y'
+    charges_mast.charge_name,
+    charges_mast.taxable,
+    charges_mast.company_id,
+    charges_mast.TallyName,
+    SUM(tbl_booking_charge_summery.Amount) AS total_amount
+FROM charges_mast
+JOIN tbl_booking_charge_summery 
+    ON charges_mast.id = tbl_booking_charge_summery.ChargeId
+WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
+  AND charges_mast.taxable = 'Y'
+GROUP BY 
+    charges_mast.charge_name,
+    charges_mast.taxable,
+    charges_mast.company_id,
+    charges_mast.TallyName
+ORDER BY charges_mast.charge_name;
   `;
 
   // 🔹 Query for non-taxable
   const sqlNonTaxable = `
     SELECT 
-      charges_mast.id AS charge_id,
-      charges_mast.charge_name,
-      charges_mast.taxable,
-      charges_mast.CreatedOn,
-      charges_mast.user_id,
-      charges_mast.company_id,
-      charges_mast.TallyName,
-      tbl_booking_charge_summery.id AS booking_charge_id,
-      tbl_booking_charge_summery.BookingId,
-      tbl_booking_charge_summery.Amount,
-      tbl_booking_charge_summery.charge_type,
-      tbl_booking_charge_summery.imgPath
-    FROM charges_mast
-    JOIN tbl_booking_charge_summery 
-      ON charges_mast.id = tbl_booking_charge_summery.ChargeId
-    WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
-      AND charges_mast.taxable = 'N'
+    charges_mast.charge_name,
+    charges_mast.taxable,
+    charges_mast.company_id,
+    charges_mast.TallyName,
+    SUM(tbl_booking_charge_summery.Amount) AS total_amount
+FROM charges_mast
+JOIN tbl_booking_charge_summery 
+    ON charges_mast.id = tbl_booking_charge_summery.ChargeId
+WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
+  AND charges_mast.taxable = 'N'
+GROUP BY 
+    charges_mast.charge_name,
+    charges_mast.taxable,
+    charges_mast.company_id,
+    charges_mast.TallyName
+ORDER BY charges_mast.charge_name;
   `;
 
   // 🔹 Execute both
