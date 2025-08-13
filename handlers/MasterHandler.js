@@ -68,11 +68,12 @@ class MasterHandler extends WebSocketHandler {
       user_id: this._user.Id,
     };
     const result = await createCartype(params);
-    if (result) {
-      this.send({
+    if (result.StatusID === 1) {
+      this.send({msg: "Car type create success full", type: "success"})
+      this.broadcastTo({
         for: "CarTypeAddUpdate",
-        ...result,
-      });
+        data: result.data
+      }, { company_id: this._user.company_id });
     } else {
       this.send({
         msg: "No data found",
@@ -87,7 +88,6 @@ class MasterHandler extends WebSocketHandler {
     const params = {
       ...this.body,
     };
-
     const result = await deleteCartype(params);
     if (result) {
       this.send({
