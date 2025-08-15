@@ -30,7 +30,7 @@ const { gateAllVendor } = require("../controllers/vendorMasterController");
 const { getAllUserList, createUpdateUser } = require("../controllers/userMasterController")
 const { getAllMonthlyDuty, createUpdateMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
 const { getAllGuest, updateGuest, createGuest } = require("../controllers/guestMasterController");
-const { getAllCompany } = require("../controllers/companyMasterController");
+const { getAllCompany, createUpdateCompany } = require("../controllers/companyMasterController");
 
 class MasterHandler extends WebSocketHandler {
   constructor() {
@@ -593,6 +593,39 @@ class MasterHandler extends WebSocketHandler {
         for: "getAllCompany",
         ...result,
       });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+
+
+  async createUpdateCompanyMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await createUpdateCompany(params);
+    if (result.StatusID === 1) {
+      this.send({ msg: result.StatusMessage, type: "success" })
+      this.broadcastTo({
+        for: "createUpdateCompany",
+        StatusID: result.StatusID,
+        data: result.data
+      }, { company_id: this._user.company_id });
+    } else if (result.StatusID === 2) {
+      this.send({ msg: result.StatusMessage, type: "error" })
+      this.broadcastTo({
+        for: "createUpdateCompany",
+        StatusID: result.StatusID,
+        data: result.data
+      }, { company_id: this._user.company_id });
     } else {
       this.send({
         msg: "No data found",
