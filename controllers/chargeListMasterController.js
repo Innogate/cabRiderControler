@@ -1,7 +1,7 @@
 const sql = require("mssql");
 const PDO = require("../core/pod.js");
 
-exports.gatAllChargesList = async (params) => {
+exports.getAllChargesList = async (params) => {
   const {
     id = 0,
     PageNo = 1,
@@ -41,7 +41,7 @@ exports.gatAllChargesList = async (params) => {
 };
 
 
-exports.create_update_charges = async (params) => {
+exports.createUpdateCharges = async (params) => {
   const {
     id = 0,
     charge_name = '',

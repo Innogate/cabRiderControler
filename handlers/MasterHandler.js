@@ -7,9 +7,9 @@ const {
   deleteCartype,
 } = require("../controllers/carTypeMasterController");
 const {
-  gatAllChargesList,
-  create_update_charges,
   deleteCharges,
+  getAllChargesList,
+  createUpdateCharges,
 } = require("../controllers/chargeListMasterController");
 const {
   gatAllDriverList,
@@ -113,14 +113,14 @@ class MasterHandler extends WebSocketHandler {
     }
   }
 
-  async gatAllChargesList() {
+  async getAllChargesList() {
     this.requireAuth();
     const params = {
       ...this.body,
       company_id: this._user.company_id,
       user_id: this._user.Id,
     };
-    const result = await gatAllChargesList(params);
+    const result = await getAllChargesList(params);
     if (result) {
       this.send({
         for: "gatAllCharges",
@@ -137,23 +137,40 @@ class MasterHandler extends WebSocketHandler {
 
   async createUpdateChargesMaster() {
     this.requireAuth();
-    const params = {
-      ...this.body,
-      company_id: this._user.company_id,
-      user_id: this._user.Id,
-    };
 
-    const result = await create_update_charges(params);
-    if (result) {
+    try {
+      const params = {
+        ...this.body,
+        company_id: this._user.company_id,
+        user_id: this._user.Id,
+      };
+
+      const result = await createUpdateCharges(params);
+
+      if (result?.StatusID === 1) {
+        this.send({ msg: result.StatusMessage, type: "success" });
+
+        this.broadcastTo(
+          {
+            for: "chargesAddUpdate",
+            StatusID: result.StatusID,
+            data: result.data || null
+          },
+          { company_id: this._user.company_id }
+        );
+      } else {
+        this.send({
+          msg: result?.msg || "Something went wrong",
+          type: "warning",
+          ...result
+        });
+      }
+
+    } catch (error) {
       this.send({
-        for: "chargesAddUpdate",
-        ...result,
-      });
-    } else {
-      this.send({
-        msg: "No data found",
-        type: "warning",
-        ...result,
+        msg: "An unexpected error occurred. Please try again.",
+        type: "error",
+        error: error.message || error
       });
     }
   }
