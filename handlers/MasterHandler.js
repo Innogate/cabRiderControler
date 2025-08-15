@@ -71,6 +71,7 @@ class MasterHandler extends WebSocketHandler {
       this.send({ msg: "Data Insert Updated", type: "success" })
       this.broadcastTo({
         for: "CarTypeAddUpdate",
+        StatusID: result.StatusID,
         data: result.data
       }, { company_id: this._user.company_id });
     } else {
