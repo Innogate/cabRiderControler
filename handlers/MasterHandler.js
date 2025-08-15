@@ -67,8 +67,15 @@ class MasterHandler extends WebSocketHandler {
       user_id: this._user.Id,
     };
     const result = await createCartype(params);
-    if (result) {
+    if (result.StatusID === 1) {
       this.send({ msg: "Data Insert Updated", type: "success" })
+      this.broadcastTo({
+        for: "CarTypeAddUpdate",
+        StatusID: result.StatusID,
+        data: result.data
+      }, { company_id: this._user.company_id });
+    } else if (result.StatusID === 2) {
+      this.send({ msg: "Cartype name alrady exit", type: "error" })
       this.broadcastTo({
         for: "CarTypeAddUpdate",
         StatusID: result.StatusID,
