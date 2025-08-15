@@ -16,7 +16,7 @@ const {
   create_update_driver,
 } = require("../controllers/driverMasterController");
 const {
-  getAllDriverSalarySetupList,createDriverSalarySetupList
+  getAllDriverSalarySetupList, createDriverSalarySetupList
 } = require("../controllers/driverSalarySetupMasterController");
 const {
   getAllPartyRateList,
@@ -30,6 +30,7 @@ const { gateAllVendor } = require("../controllers/vendorMasterController");
 const { getAllUserList, createUpdateUser } = require("../controllers/userMasterController")
 const { getAllMonthlyDuty, createUpdateMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
 const { getAllGuest, updateGuest, createGuest } = require("../controllers/guestMasterController");
+const { getAllCompany } = require("../controllers/companyMasterController");
 
 class MasterHandler extends WebSocketHandler {
   constructor() {
@@ -501,7 +502,7 @@ class MasterHandler extends WebSocketHandler {
   }
 
 
-    async createUpdateMonthlyDutyMaster() {
+  async createUpdateMonthlyDutyMaster() {
     this.requireAuth();
     const params = {
       ...this.body,
@@ -567,6 +568,28 @@ class MasterHandler extends WebSocketHandler {
     }
   }
 
+
+  async getAllCompanyMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await getAllCompany(params);
+    if (result) {
+      this.send({
+        for: "getAllCompany",
+        ...result,
+      });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
 }
 
 module.exports = new MasterHandler();
