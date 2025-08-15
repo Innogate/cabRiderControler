@@ -92,10 +92,12 @@ class MasterHandler extends WebSocketHandler {
 
     const result = await deleteCartype(params);
     if (result) {
-      this.send({
+      this.send({ msg: "Delete Data", type: "success" })
+      this.broadcastTo({
         for: "CarTypeDel",
-        ...result,
-      });
+        StatusID: result.StatusID,
+        data: result.data || null
+      }, { company_id: this._user.company_id });
     } else {
       this.send({
         msg: "No data found",
