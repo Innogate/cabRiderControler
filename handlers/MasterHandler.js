@@ -16,7 +16,7 @@ const {
   create_update_driver,
 } = require("../controllers/driverMasterController");
 const {
-  getAllDriverSalarySetupList,createDriverSalarySetupList
+  getAllDriverSalarySetupList, createDriverSalarySetupList
 } = require("../controllers/driverSalarySetupMasterController");
 const {
   getAllPartyRateList,
@@ -68,10 +68,11 @@ class MasterHandler extends WebSocketHandler {
     };
     const result = await createCartype(params);
     if (result) {
-      this.send({
+      this.send({ msg: "Data Insert Updated", type: "success" })
+      this.broadcastTo({
         for: "CarTypeAddUpdate",
-        ...result,
-      });
+        data: result.data
+      }, { company_id: this._user.company_id });
     } else {
       this.send({
         msg: "No data found",
@@ -501,7 +502,7 @@ class MasterHandler extends WebSocketHandler {
   }
 
 
-    async createUpdateMonthlyDutyMaster() {
+  async createUpdateMonthlyDutyMaster() {
     this.requireAuth();
     const params = {
       ...this.body,
