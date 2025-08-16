@@ -40,6 +40,7 @@ exports.getAllCompany = async (params) => {
 exports.createUpdateCompany = async (params) => {
   const {
     id,
+    ShortName,
     companyName,
     companyAddress,
     companyPhone,
@@ -76,6 +77,7 @@ exports.createUpdateCompany = async (params) => {
     procName: "sp_app_create_Companymast",
     inputParams: [
       { name: "Id", type: sql.Int, value: id || 0 },
+      { name: "ShortName", type: sql.VarChar(50), value: ShortName || ''},
       { name: "companyName", type: sql.VarChar(200), value: companyName || '' },
       { name: "companyAddress", type: sql.VarChar(sql.MAX), value: companyAddress || '' },
       { name: "companyPhone", type: sql.VarChar(50), value: companyPhone || '' },
