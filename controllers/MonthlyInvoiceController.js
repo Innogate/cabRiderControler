@@ -73,6 +73,12 @@ exports.getInvoiceList = async (params) => {
     sqlParams.search = `%${search}%`;
   }
 
+  // for_company_id
+  if (for_company_id) {
+    whereClause += ` AND company_id = @for_company_id`;
+    sqlParams.for_company_id = for_company_id;
+  }
+
   // 3️⃣ Count query (for pagination total)
   const countQuery = `
     SELECT COUNT(*) as total 
@@ -91,7 +97,7 @@ exports.getInvoiceList = async (params) => {
     SELECT *
     FROM "MonthlyBillHead"
     ${whereClause}
-    ORDER BY created_at DESC
+    ORDER BY id DESC
     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
   `;
 
