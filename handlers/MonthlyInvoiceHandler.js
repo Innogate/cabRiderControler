@@ -1,6 +1,6 @@
 const WebSocketHandler = require("../core/WebSocketHandler");
 const jwt = require("../core/jwt");
-const { getDutySetupCode, getMBookingList } = require("../controllers/MonthlyInvoiceController");
+const { getDutySetupCode, getMBookingList,getInvoiceList } = require("../controllers/MonthlyInvoiceController");
 
 class MInvoiceHandler extends WebSocketHandler {
   constructor() {
@@ -70,6 +70,30 @@ class MInvoiceHandler extends WebSocketHandler {
 
 
 
+async getMonthlyInvoiceList() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    }
+    const result = await getInvoiceList(params);
+
+    if (result) {
+      this.send({
+        type: "success",
+        for: "minvoice.getMonthlyInvoiceList",
+        msg: "Monthly Invoice details retrieved successfully",
+        data: result,
+      });
+    } else {
+      this.send({
+        type: "error",
+        for: "minvoice.getMonthlyInvoiceList",
+        msg: "Failed to retrieve Monthly Invoice details",
+      });
+    }
+  }
 
 
 }
