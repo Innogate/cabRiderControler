@@ -228,7 +228,7 @@ class MasterHandler extends WebSocketHandler {
     };
     const result = await create_update_driver(params);
     if (result.StatusID === 1) {
-      this.send({ msg: msg.StatusMessage, type: "success" })
+      this.send({ msg: result.StatusMessage, type: "success" })
       this.broadcastTo({
         for: "CreateUpdateDriver",
         StatusID: result.StatusID,
