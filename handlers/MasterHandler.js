@@ -227,11 +227,13 @@ class MasterHandler extends WebSocketHandler {
       user_id: this._user.Id,
     };
     const result = await create_update_driver(params);
-    if (result) {
-      this.send({
+    if (result.StatusID === 1) {
+      this.send({ msg: msg.StatusMessage, type: "success" })
+      this.broadcastTo({
         for: "CreateUpdateDriver",
-        ...result,
-      });
+        StatusID: result.StatusID,
+        data: result.data || null
+      }, { company_id: this._user.company_id });
     } else {
       this.send({
         msg: "No data found",
