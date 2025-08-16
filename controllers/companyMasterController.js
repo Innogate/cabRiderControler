@@ -67,6 +67,7 @@ exports.createUpdateCompany = async (params) => {
     Tally_CarRentPurchaseAc,
     Tally_SaleVouchType,
     Tally_PurVouchType,
+    Udyam,
     user_id,
     company_id
   } = params;
@@ -104,6 +105,7 @@ exports.createUpdateCompany = async (params) => {
       { name: "Tally_CarRentPurchaseAc", type: sql.NVarChar(50), value: Tally_CarRentPurchaseAc || '' },
       { name: "Tally_SaleVouchType", type: sql.NVarChar(50), value: Tally_SaleVouchType || '' },
       { name: "Tally_PurVouchType", type: sql.NVarChar(50), value: Tally_PurVouchType || '' },
+      { name: "Udyam", type: sql.VarChar(50), value: Udyam},
       { name: "user_id", type: sql.Int, value: user_id },
       { name: "company_id", type: sql.Int, value: company_id },
     ],
