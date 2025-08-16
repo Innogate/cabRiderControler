@@ -13,6 +13,7 @@ const {
   getAllVendorDropdown,
   guestFilterBySearchParametor,
   carSearchFilterBySearchParametor,
+  getAllCartypeMasterDropdown,
 } = require("../controllers/comonApiController");
 
 class CommonHandler extends WebSocketHandler {
@@ -233,6 +234,27 @@ class CommonHandler extends WebSocketHandler {
     if (result?.data) {
       this.send({
         for: "carSearchFilterBySearchParametor",
+        ...result,
+      });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+  async getAllCartype() {
+    this.requireAuth();
+    const params = {
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await getAllCartypeMasterDropdown(params);
+    if (result?.data) {
+      this.send({
+        for: "getAllCartypeMasterDropdown",
         ...result,
       });
     } else {
