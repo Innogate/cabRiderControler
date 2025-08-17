@@ -1,6 +1,6 @@
 const WebSocketHandler = require("../core/WebSocketHandler");
 const jwt = require("../core/jwt");
-const { getDutySetupCode, getMBookingList,getInvoiceList } = require("../controllers/MonthlyInvoiceController");
+const { getDutySetupCode, getMBookingList,getInvoiceList, createMonthlyBill } = require("../controllers/MonthlyInvoiceController");
 
 class MInvoiceHandler extends WebSocketHandler {
   constructor() {
@@ -54,23 +54,25 @@ class MInvoiceHandler extends WebSocketHandler {
 
 
   async createMonthlyBilling() {
-  this.requireAuth();
+    this.requireAuth();
 
-  const payload = {
-    ...this.body 
-  };
-  console.log(" Received billing payload:", payload);
-  this.send({
-    type: "success",
-    for: "minvoice.createMonthlyBilling",
-    msg: "Billing form created successfully",
-    data: payload, 
-  });
-}
+    const payload = {
+      ...this.body,
+      parent_company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await createMonthlyBill(payload);
+    this.send({
+      // type: "success",
+      for: "minvoice.createMonthlyBillingx",
+      // msg: "Billing form created successfully",
+      data: result, 
+    });
+  }
 
 
 
-async getMonthlyInvoiceList() {
+  async getMonthlyInvoiceList() {
     this.requireAuth();
     const params = {
       ...this.body,

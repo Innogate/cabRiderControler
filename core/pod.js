@@ -7,7 +7,6 @@ let globalRedis = null;
 // Initialize SQL Pool
 async function initPool() {
   if (!globalPool) {
-    // console.log("⏳ Connecting to SQL Server...");
     globalPool = await sql.connect({
       user: process.env.DB_USER,
       password: process.env.DB_PASS,
@@ -19,7 +18,6 @@ async function initPool() {
         encrypt: false,
       },
     });
-    // console.log("✅ SQL Server connected.");
   }
   return globalPool;
 }
@@ -27,7 +25,6 @@ async function initPool() {
 // Initialize Redis
 async function initRedis() {
   if (!globalRedis && process.env.USE_REDIS === "true") {
-    // console.log("⏳ Connecting to Redis...");
     globalRedis = redis.createClient({
       socket: {
         host: process.env.REDIS_HOST,
@@ -36,7 +33,6 @@ async function initRedis() {
     });
     globalRedis.on("error", (err) => console.error("❌ Redis error:", err));
     await globalRedis.connect();
-    // console.log("✅ Redis connected.");
   }
   return globalRedis;
 }
@@ -55,8 +51,8 @@ class PDO {
   /**
    * Execute raw SQL with optional Redis caching
    * @param {Object} options
-   * @param {string|null} options.key - Redis key
    * @param {string} options.sqlQuery - SQL string to execute
+   * @param {object} options.params - Named params object
    * @param {number} options.ttl - Time to live in Redis (in seconds)
    */
   async execute({ sqlQuery = "", params = {}, ttl = 120 }) {
@@ -76,8 +72,8 @@ class PDO {
     const request = this.pool.request();
 
     // Bind all parameters
-    for (const [key, value] of Object.entries(params)) {
-      request.input(key, value);
+    for (const [name, value] of Object.entries(params)) {
+      request.input(name, value);
     }
 
     const result = await request.query(sqlQuery);
@@ -90,17 +86,15 @@ class PDO {
     return data;
   }
 
-
   /**
    * Execute a stored procedure with in/out parameters, optionally cache result
    * @param {Object} options
-   * @param {string} options.procName - Name of the stored procedure
-   * @param {Array} options.inputParams - Input parameters [{ name, type, value }]
-   * @param {Array} options.outputParams - Output parameters [{ name, type }]
-   * @param {string|null} options.key - Optional Redis key for caching
-   * @param {number} options.ttl - TTL for Redis cache
+   * @param {string} options.procName
+   * @param {Array<{name:string,type:any,value:any}>} options.inputParams
+   * @param {Array<{name:string,type:any}>} options.outputParams
+   * @param {string|null} options.key
+   * @param {number} options.ttl
    */
-  // ✅ Stored procedure call with automatic Redis key handling
   async callProcedure({
     procName,
     inputParams = [],
@@ -112,59 +106,99 @@ class PDO {
       await this.connect();
     }
 
-    // 🔑 Auto-generate Redis key from procName + input param values
+    // Auto key
     if (this.redis && process.env.USE_REDIS === "true") {
       if (!key) {
-        const inputStr = inputParams
-          .map((p) => `${p.name}=${p.value}`)
-          .join("|");
+        const inputStr = inputParams.map((p) => `${p.name}=${p.value}`).join("|");
         key = `proc:${procName}:${inputStr}`;
       }
-
-      // Try Redis
       const cached = await this.redis.get(key);
-      if (cached) {
-        // console.log(
-        //   `🟢 Data retrieved from Redis cache for procedure key: ${key}`
-        // );
-        return JSON.parse(cached);
-      }
+      if (cached) return JSON.parse(cached);
     }
-    // 
-    // console.log(`🛠️ Calling stored procedure: ${procName}`);
+
     const request = this.pool.request();
 
     for (const param of inputParams) {
-      // console.log(`➡️ Input: ${param.name} = ${param.value}`);
       request.input(param.name, param.type, param.value);
     }
-
     for (const param of outputParams) {
-      // console.log(`⬅️ Output: ${param.name}`);
       request.output(param.name, param.type);
     }
 
     const result = await request.execute(procName);
-
-    // console.log(`✅ Procedure ${procName} executed.`);
-    if (result.output) {
-      // console.log("🔁 Output values:", result.output);
-    }
 
     const response = {
       data: result.recordset || [],
       output: result.output || {},
     };
 
-    // Cache the result in Redis
     if (this.redis && key) {
-      // console.log(
-      `📝 Caching procedure result in Redis with key: ${key} (TTL: ${ttl}s)`
-      // );
       await this.redis.set(key, JSON.stringify(response), { EX: ttl });
     }
 
     return response;
+  }
+
+  // ===============================
+  // NEW: Transaction helpers (additive)
+  // ===============================
+
+  /**
+   * Begin a SQL transaction and return { transaction, request } bound to it.
+   * You can chain multiple requests using the same transaction.
+   */
+  async beginTransaction() {
+    if (!this.pool) {
+      await this.connect();
+    }
+    const transaction = new sql.Transaction(this.pool);
+    await transaction.begin();
+    const request = new sql.Request(transaction);
+    return { transaction, request };
+  }
+
+  /**
+   * Commit a given transaction
+   */
+  async commitTransaction(transaction) {
+    if (transaction) {
+      await transaction.commit();
+    }
+  }
+
+  /**
+   * Rollback a given transaction
+   */
+  async rollbackTransaction(transaction) {
+    if (transaction) {
+      try {
+        await transaction.rollback();
+      } catch (e) {
+        // swallow rollback errors
+      }
+    }
+  }
+
+  /**
+   * Convenience wrapper to run a set of queries atomically.
+   * The callback receives a Request bound to the transaction.
+   * Example:
+   *   await pdo.executeInTransaction(async (trxRequest) => {
+   *     trxRequest.input('x', 1);
+   *     await trxRequest.query('INSERT ...');
+   *     // Do more...
+   *   });
+   */
+  async executeInTransaction(callback) {
+    const { transaction, request } = await this.beginTransaction();
+    try {
+      const result = await callback(request);
+      await this.commitTransaction(transaction);
+      return result;
+    } catch (err) {
+      await this.rollbackTransaction(transaction);
+      throw err;
+    }
   }
 }
 

@@ -2,29 +2,29 @@ const sql = require("mssql");
 const PDO = require("../core/pod.js");
 
 exports.getDutySetupCode = async (params) => {
-    const pdo = new PDO();
-    const { party_id = 0 } = params;
-    const result = await pdo.execute({
-        sqlQuery: "select * from dbo.MonthDutySetup WHERE PartyID = @party_id;",
-        params: { party_id: party_id },
-        ttl: 300,
-    });
-    return result;
+  const pdo = new PDO();
+  const { party_id = 0 } = params;
+  const result = await pdo.execute({
+    sqlQuery: "select * from dbo.MonthDutySetup WHERE PartyID = @party_id;",
+    params: { party_id: party_id },
+    ttl: 300,
+  });
+  return result;
 }
 
 
 
 exports.getMBookingList = async (params) => {
-    console.log(params)
-    const {
-        party_id = 0,
-        from_city_id = 0,
-        branch_id = 0,
-        company_id = 0,
-    } = params;
-    const pdo = new PDO();
-    const result = await pdo.execute({
-        sqlQuery: `
+  console.log(params)
+  const {
+    party_id = 0,
+    from_city_id = 0,
+    branch_id = 0,
+    company_id = 0,
+  } = params;
+  const pdo = new PDO();
+  const result = await pdo.execute({
+    sqlQuery: `
     SELECT * 
     FROM dbo.booking_details bd 
     WHERE bd.Party = @party_id 
@@ -38,16 +38,16 @@ exports.getMBookingList = async (params) => {
           WHERE bem.booking_id = bd.id
       );
   `,
-        params: {
-            party_id: party_id,
-            branch_id: branch_id,
-            company_id: company_id,
-            from_city_id: from_city_id
-        },
-        ttl: 300
-    });
+    params: {
+      party_id: party_id,
+      branch_id: branch_id,
+      company_id: company_id,
+      from_city_id: from_city_id
+    },
+    ttl: 300
+  });
 
-    return result;
+  return result;
 }
 
 exports.getInvoiceList = async (params) => {
@@ -123,337 +123,68 @@ exports.getInvoiceList = async (params) => {
   };
 };
 
-
 exports.createMonthlyBill = async (params) => {
-    const {
-        taxtype = null,
-        BillDate = null,
-        BillNo = null,
-        company_id = null,
-        parent_company_id = 0,
-        branch_id = null,
-        city_id = null,
-        party_id = null,
-        GrossAmount = 0.00,
-        OtherCharges = 0.00,
-        IGSTPer = 0.00,
-        CGSTPer = 0.00,
-        SGSTPer = 0.00,
-        IGST = 0.00,
-        CGST = 0.00,
-        SGST = 0.00,
-        OtherCharges2 = 0.00,
-        round_off = 0.00,
-        Advance = 0.00,
-        Discount = 0.00,
-        NetAmount = 0.00,
-        user_id = 0,
-        rcm = null,
-        monthly_duty_id = null,
-        fixed_amount = 0.00,
-        no_of_days = null,
-        fixed_amount_total = 0.00,
-        extra_hours = 0.00,
-        extra_hours_rate = 0.00,
-        extra_hours_amount = 0.00,
-        extra_km = 0.00,
-        extra_km_rate = 0.00,
-        extra_km_amount = 0.00,
-        except_day_hrs = 0.00,
-        except_day_hrs_rate = 0.00,
-        except_day_hrs_amount = 0.00,
-        except_day_km = 0.00,
-        except_day_km_rate = 0.00,
-        except_day_km_amount = 0.00,
-        fuel_amount = 0.00,
-        mobil_amount = 0.00,
-        parking_amount = 0.00,
-        night_amount = 0.00,
-        outstation_amount = 0.00,
-        proportionate = 0.00,
-        bill_total = 0.00,
-        amount_payable = 0.00,
-        remarks = null,
-        Invcancel = 'N',
-        InvcancelOn = null,
-        Invcancelby = null,
-        InvcancelReason = null
-    } = params;
+  const pdo = new PDO();
 
-    const pdo = new PDO();
-    
-    const result = await pdo.execute({
-        sqlQuery: `
-            INSERT INTO "MonthlyBillHead" (
-                taxtype, "BillDate", "BillNo", company_id, parent_company_id, branch_id, city_id, party_id,
-                "GrossAmount", "OtherCharges", "IGSTPer", "CGSTPer", "SGSTPer", "IGST", "CGST", "SGST", "OtherCharges2",
-                round_off, "Advance", "Discount", "NetAmount", user_id, rcm, monthly_duty_id, fixed_amount,
-                no_of_days, fixed_amount_total, extra_hours, extra_hours_rate, extra_hours_amount,
-                extra_km, extra_km_rate, extra_km_amount, except_day_hrs, except_day_hrs_rate,
-                except_day_hrs_amount, except_day_km, except_day_km_rate, except_day_km_amount,
-                fuel_amount, mobil_amount, parking_amount, night_amount, outstation_amount,
-                proportionate, bill_total, amount_payable, remarks, "Invcancel", "InvcancelOn",
-                "Invcancelby", "InvcancelReason"
-            )
-            OUTPUT INSERTED.id
-            VALUES (
-                @taxtype, @BillDate, @BillNo, @company_id, @parent_company_id, @branch_id, @city_id, @party_id,
-                @GrossAmount, @OtherCharges, @IGSTPer, @CGSTPer, @SGSTPer, @IGST, @CGST, @SGST, @OtherCharges2,
-                @round_off, @Advance, @Discount, @NetAmount, @user_id, @rcm, @monthly_duty_id, @fixed_amount,
-                @no_of_days, @fixed_amount_total, @extra_hours, @extra_hours_rate, @extra_hours_amount,
-                @extra_km, @extra_km_rate, @extra_km_amount, @except_day_hrs, @except_day_hrs_rate,
-                @except_day_hrs_amount, @except_day_km, @except_day_km_rate, @except_day_km_amount,
-                @fuel_amount, @mobil_amount, @parking_amount, @night_amount, @outstation_amount,
-                @proportionate, @bill_total, @amount_payable, @remarks, @Invcancel, @InvcancelOn,
-                @Invcancelby, @InvcancelReason
-            );
-        `,
-        params: {
-            taxtype,
-            BillDate,
-            BillNo,
-            company_id,
-            parent_company_id,
-            branch_id,
-            city_id,
-            party_id,
-            GrossAmount,
-            OtherCharges,
-            IGSTPer,
-            CGSTPer,
-            SGSTPer,
-            IGST,
-            CGST,
-            SGST,
-            OtherCharges2,
-            round_off,
-            Advance,
-            Discount,
-            NetAmount,
-            user_id,
-            rcm,
-            monthly_duty_id,
-            fixed_amount,
-            no_of_days,
-            fixed_amount_total,
-            extra_hours,
-            extra_hours_rate,
-            extra_hours_amount,
-            extra_km,
-            extra_km_rate,
-            extra_km_amount,
-            except_day_hrs,
-            except_day_hrs_rate,
-            except_day_hrs_amount,
-            except_day_km,
-            except_day_km_rate,
-            except_day_km_amount,
-            fuel_amount,
-            mobil_amount,
-            parking_amount,
-            night_amount,
-            outstation_amount,
-            proportionate,
-            bill_total,
-            amount_payable,
-            remarks,
-            Invcancel,
-            InvcancelOn,
-            Invcancelby,
-            InvcancelReason
-        }
-    });
+  return await pdo.executeInTransaction(async (trx) => {
+    // Bind only the fields used in the INSERT below
+    const bindList = [
+      'taxtype','BillDate','company_id','parent_company_id','branch_id','city_id','party_id',
+      'GrossAmount','OtherCharges','IGSTPer','CGSTPer','SGSTPer','IGST','CGST','SGST','OtherCharges2',
+      'round_off','Advance','Discount','NetAmount','user_id','rcm','monthly_duty_id','fixed_amount',
+      'no_of_days','fixed_amount_total','extra_hours','extra_hours_rate','extra_hours_amount',
+      'extra_km','extra_km_rate','extra_km_amount','except_day_hrs','except_day_hrs_rate',
+      'except_day_hrs_amount','except_day_km','except_day_km_rate','except_day_km_amount',
+      'fuel_amount','mobil_amount','parking_amount','night_amount','outstation_amount','proportionate',
+      'bill_total','amount_payable','remarks','Invcancel','InvcancelOn','Invcancelby','InvcancelReason'
+    ];
 
-    return result;
-};
+    for (const key of bindList) {
+      trx.input(key, params[key] ?? null);
+    }
 
-// Optional: Update function
-exports.updateMonthlyBill = async (params) => {
-    const {
-        id,
-        taxtype = null,
-        BillDate = null,
-        BillNo = null,
-        company_id = null,
-        parent_company_id = 0,
-        branch_id = null,
-        city_id = null,
-        party_id = null,
-        GrossAmount = 0.00,
-        OtherCharges = 0.00,
-        IGSTPer = 0.00,
-        CGSTPer = 0.00,
-        SGSTPer = 0.00,
-        IGST = 0.00,
-        CGST = 0.00,
-        SGST = 0.00,
-        OtherCharges2 = 0.00,
-        round_off = 0.00,
-        Advance = 0.00,
-        Discount = 0.00,
-        NetAmount = 0.00,
-        user_id = 0,
-        rcm = null,
-        monthly_duty_id = null,
-        fixed_amount = 0.00,
-        no_of_days = null,
-        fixed_amount_total = 0.00,
-        extra_hours = 0.00,
-        extra_hours_rate = 0.00,
-        extra_hours_amount = 0.00,
-        extra_km = 0.00,
-        extra_km_rate = 0.00,
-        extra_km_amount = 0.00,
-        except_day_hrs = 0.00,
-        except_day_hrs_rate = 0.00,
-        except_day_hrs_amount = 0.00,
-        except_day_km = 0.00,
-        except_day_km_rate = 0.00,
-        except_day_km_amount = 0.00,
-        fuel_amount = 0.00,
-        mobil_amount = 0.00,
-        parking_amount = 0.00,
-        night_amount = 0.00,
-        outstation_amount = 0.00,
-        proportionate = 0.00,
-        bill_total = 0.00,
-        amount_payable = 0.00,
-        remarks = null,
-        Invcancel = 'N',
-        InvcancelOn = null,
-        Invcancelby = null,
-        InvcancelReason = null
-    } = params;
+    const insertHeadSql = `
+      INSERT INTO MonthlyBillHead (
+        taxtype, BillDate, company_id, parent_company_id, branch_id, city_id, party_id,
+        GrossAmount, OtherCharges, IGSTPer, CGSTPer, SGSTPer, IGST, CGST, SGST, OtherCharges2,
+        round_off, Advance, Discount, NetAmount, user_id, rcm, monthly_duty_id, fixed_amount,
+        no_of_days, fixed_amount_total, extra_hours, extra_hours_rate, extra_hours_amount,
+        extra_km, extra_km_rate, extra_km_amount, except_day_hrs, except_day_hrs_rate,
+        except_day_hrs_amount, except_day_km, except_day_km_rate, except_day_km_amount,
+        fuel_amount, mobil_amount, parking_amount, night_amount, outstation_amount, proportionate,
+        bill_total, amount_payable, remarks, Invcancel, InvcancelOn, Invcancelby, InvcancelReason
+      ) VALUES (
+        @taxtype, @BillDate, @company_id, @parent_company_id, @branch_id, @city_id, @party_id,
+        @GrossAmount, @OtherCharges, @IGSTPer, @CGSTPer, @SGSTPer, @IGST, @CGST, @SGST, @OtherCharges2,
+        @round_off, @Advance, @Discount, @NetAmount, @user_id, @rcm, @monthly_duty_id, @fixed_amount,
+        @no_of_days, @fixed_amount_total, @extra_hours, @extra_hours_rate, @extra_hours_amount,
+        @extra_km, @extra_km_rate, @extra_km_amount, @except_day_hrs, @except_day_hrs_rate,
+        @except_day_hrs_amount, @except_day_km, @except_day_km_rate, @except_day_km_amount,
+        @fuel_amount, @mobil_amount, @parking_amount, @night_amount, @outstation_amount, @proportionate,
+        @bill_total, @amount_payable, @remarks, @Invcancel, @InvcancelOn, @Invcancelby, @InvcancelReason
+      );
+      SELECT SCOPE_IDENTITY() AS id;
+    `;
 
-    const pdo = new PDO();
-    
-    const result = await pdo.execute({
-        sqlQuery: `
-            UPDATE "MonthlyBillHead" 
-            SET 
-                taxtype = @taxtype,
-                "BillDate" = @BillDate,
-                "BillNo" = @BillNo,
-                company_id = @company_id,
-                parent_company_id = @parent_company_id,
-                branch_id = @branch_id,
-                city_id = @city_id,
-                party_id = @party_id,
-                "GrossAmount" = @GrossAmount,
-                "OtherCharges" = @OtherCharges,
-                "IGSTPer" = @IGSTPer,
-                "CGSTPer" = @CGSTPer,
-                "SGSTPer" = @SGSTPer,
-                "IGST" = @IGST,
-                "CGST" = @CGST,
-                "SGST" = @SGST,
-                "OtherCharges2" = @OtherCharges2,
-                round_off = @round_off,
-                "Advance" = @Advance,
-                "Discount" = @Discount,
-                "NetAmount" = @NetAmount,
-                user_id = @user_id,
-                rcm = @rcm,
-                monthly_duty_id = @monthly_duty_id,
-                fixed_amount = @fixed_amount,
-                no_of_days = @no_of_days,
-                fixed_amount_total = @fixed_amount_total,
-                extra_hours = @extra_hours,
-                extra_hours_rate = @extra_hours_rate,
-                extra_hours_amount = @extra_hours_amount,
-                extra_km = @extra_km,
-                extra_km_rate = @extra_km_rate,
-                extra_km_amount = @extra_km_amount,
-                except_day_hrs = @except_day_hrs,
-                except_day_hrs_rate = @except_day_hrs_rate,
-                except_day_hrs_amount = @except_day_hrs_amount,
-                except_day_km = @except_day_km,
-                except_day_km_rate = @except_day_km_rate,
-                except_day_km_amount = @except_day_km_amount,
-                fuel_amount = @fuel_amount,
-                mobil_amount = @mobil_amount,
-                parking_amount = @parking_amount,
-                night_amount = @night_amount,
-                outstation_amount = @outstation_amount,
-                proportionate = @proportionate,
-                bill_total = @bill_total,
-                amount_payable = @amount_payable,
-                remarks = @remarks,
-                "Invcancel" = @Invcancel,
-                "InvcancelOn" = @InvcancelOn,
-                "Invcancelby" = @Invcancelby,
-                "InvcancelReason" = @InvcancelReason
-            WHERE id = @id;
-        `,
-        params: {
-            id,
-            taxtype,
-            BillDate,
-            BillNo,
-            company_id,
-            parent_company_id,
-            branch_id,
-            city_id,
-            party_id,
-            GrossAmount,
-            OtherCharges,
-            IGSTPer,
-            CGSTPer,
-            SGSTPer,
-            IGST,
-            CGST,
-            SGST,
-            OtherCharges2,
-            round_off,
-            Advance,
-            Discount,
-            NetAmount,
-            user_id,
-            rcm,
-            monthly_duty_id,
-            fixed_amount,
-            no_of_days,
-            fixed_amount_total,
-            extra_hours,
-            extra_hours_rate,
-            extra_hours_amount,
-            extra_km,
-            extra_km_rate,
-            extra_km_amount,
-            except_day_hrs,
-            except_day_hrs_rate,
-            except_day_hrs_amount,
-            except_day_km,
-            except_day_km_rate,
-            except_day_km_amount,
-            fuel_amount,
-            mobil_amount,
-            parking_amount,
-            night_amount,
-            outstation_amount,
-            proportionate,
-            bill_total,
-            amount_payable,
-            remarks,
-            Invcancel,
-            InvcancelOn,
-            Invcancelby,
-            InvcancelReason
-        }
-    });
+    const headInsertResult = await trx.query(insertHeadSql);
+    const newId = headInsertResult.recordset?.[0].id;
 
-    return result;
-};
+    // 2) Insert mappings
+    const dutyIds = Array.isArray(params.duty_ids) ? params.duty_ids : [];
+    if (dutyIds.length) {
+      // Build a single VALUES block for efficiency
+      const values = dutyIds
+        .map((bid) => `(${Number(bid)}, ${newId}, @company_id, @user_id)`)
+        .join(",\n");
 
-exports.getMonthlyBillById = async (params) => {
-    const { id } = params;
-    const pdo = new PDO();
-    
-    const result = await pdo.execute({
-        sqlQuery: `SELECT * FROM "MonthlyBillHead" WHERE id = @id;`,
-        params: { id },
-        ttl: 300
-    });
-    
-    return result[0] || null;
+      const mapSql = `
+        INSERT INTO MonthlyBillMap (booking_id, booking_entry_id, company_id, user_id)
+        VALUES
+        ${values};
+      `;
+      await trx.query(mapSql);
+    }
+
+    return { id: newId };
+  });
 };
