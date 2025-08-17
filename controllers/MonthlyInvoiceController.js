@@ -64,16 +64,18 @@ exports.getInvoiceList = async (params) => {
 
   const sqlQuery = `SELECT
   mbh.*,
-  pm.party_name   AS PartyName,
-  cm.CityName     AS CityName
+  pm.party_name AS PartyName,
+  cm.CityName   AS CityName,
+  tb.ShortName  AS BranchShortName
 FROM dbo.MonthlyBillHead AS mbh
 LEFT JOIN dbo.party_mast AS pm
   ON pm.id = mbh.party_id
 LEFT JOIN dbo.city_mast AS cm
   ON cm.Id = mbh.city_id
+LEFT JOIN dbo.tbl_branch AS tb
+  ON tb.Id = mbh.branch_id
 WHERE
-  (mbh.user_id = @user_id OR mbh.parent_company_id = @for_company_id);
-`;
+  (mbh.user_id = @user_id OR mbh.parent_company_id = @for_company_id);`;
 
   const data = await pdo.execute({
     sqlQuery,
