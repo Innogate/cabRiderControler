@@ -62,64 +62,39 @@ exports.getInvoiceList = async (params) => {
 
   const pdo = new PDO();
 
-  // 1️⃣ Base SQL for filtering
-  let whereClause = `WHERE (parent_company_id = @company_id OR user_id = @user_id)`;
-  let sqlParams = {
-    company_id,
-    user_id,
-  };
+  const sqlQuery = `SELECT
+  mbh.*,
+  pm.party_name   AS PartyName,
+  cm.CityName     AS CityName
+FROM dbo.MonthlyBillHead AS mbh
+LEFT JOIN dbo.party_mast AS pm
+  ON pm.id = mbh.party_id
+LEFT JOIN dbo.city_mast AS cm
+  ON cm.Id = mbh.city_id
+WHERE
+  (mbh.user_id = @user_id OR mbh.parent_company_id = @for_company_id);
+`;
 
-  // 2️⃣ Add search condition (if provided)
-  if (search && search.trim() !== "") {
-    whereClause += ` AND (bill_no LIKE @search OR remarks LIKE @search)`;
-    sqlParams.search = `%${search}%`;
-  }
-
-  // for_company_id
-  if (for_company_id) {
-    whereClause += ` AND company_id = @for_company_id`;
-    sqlParams.for_company_id = for_company_id;
-  }
-
-  // 3️⃣ Count query (for pagination total)
-  const countQuery = `
-    SELECT COUNT(*) as total 
-    FROM "MonthlyBillHead" 
-    ${whereClause};
-  `;
-  const countResult = await pdo.execute({
-    sqlQuery: countQuery,
-    params: sqlParams,
+  const data = await pdo.execute({
+    sqlQuery,
+    params: {
+      company_id,
+      user_id,
+      for_company_id,
+      search: search && search.trim() !== "" ? `%${search}%` : "",
+      offset: current_page * page_size,
+      limit: page_size,
+    },
   });
 
-  const totalRecords = countResult[0]?.total || 0;
+  const total = data.length ? Number(data[0].total_count) || 0 : 0;
+  const rows = data.map(({ total_count, ...rest }) => rest);
 
-  // 4️⃣ Data query with pagination
-  const dataQuery = `
-    SELECT *
-    FROM "MonthlyBillHead"
-    ${whereClause}
-    ORDER BY id DESC
-    OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
-  `;
-
-  const dataParams = {
-    ...sqlParams,
-    offset: current_page * page_size,
-    limit: page_size,
-  };
-
-  const dataResult = await pdo.execute({
-    sqlQuery: dataQuery,
-    params: dataParams,
-  });
-
-  // 5️⃣ Return structured response
   return {
-    total: totalRecords,
+    total,
     current_page,
     page_size,
-    data: dataResult,
+    data: rows,
   };
 };
 
