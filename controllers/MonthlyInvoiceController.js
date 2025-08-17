@@ -3,8 +3,10 @@ const PDO = require("../core/pod.js");
 
 exports.getDutySetupCode = async (params) => {
     const pdo = new PDO();
+    const { party_id = 0 } = params;
     const result = await pdo.execute({
-        sqlQuery: "select * from dbo.MonthDutySetup WHERE DutyNo != '';",
+        sqlQuery: "select * from dbo.MonthDutySetup WHERE PartyID = @party_id;",
+        params: { party_id: party_id },
         ttl: 300,
     });
     return result;
