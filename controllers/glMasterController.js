@@ -88,27 +88,30 @@ exports.createGl = async (params) => {
 
   try {
     const pdo = new PDO();
-    const now = new Date().toISOString().slice(0, 19).replace("T", " ");
-    // Insert new record
+    const now = new Date();
+
+    // Insert new record and return inserted row
     const result = await pdo.execute({
       sqlQuery: `
-        INSERT INTO GlTypes 
+        INSERT INTO GLMast 
         (GLName, GLType, company_id, CreatedBy, CreatedAt, UpdatedBy, UpdatedAt)
+        OUTPUT INSERTED.*
         VALUES 
-        (${GLName}, ${GLType}, ${company_id}, ${user_id}, ${now}, ${user_id}, ${now})
+        (@GLName, @GLType, @company_id, @user_id, @now, @user_id, @now)
       `,
+      params: { GLName, GLType, company_id, user_id, now },
     });
 
     const totalCountResult = await pdo.execute({
-      sqlQuery: `SELECT COUNT(*) as TotalCount FROM GlTypes`,
+      sqlQuery: `SELECT COUNT(*) as TotalCount FROM GLMast`,
     });
 
     const totalCount = totalCountResult[0]?.TotalCount || 0;
 
     return {
-      data: result,
+      data: result[0], // returning inserted record
       StatusID: 1,
-      StatusMessage: "Data inserted successfully",
+      StatusMessage: "GL Create successfully",
       TotalCount: totalCount,
     };
   } catch (error) {
