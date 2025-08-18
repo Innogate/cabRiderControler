@@ -113,49 +113,52 @@ exports.createMonthlyBill = async (params) => {
     let billNo = null;
 
     if (params.AutoBill === 1) {
-      // Bind parameters for bill generation first
-      trx.input('comp_id', params.company_id);
-      trx.input('branch_id', params.branch_id);  
+      // Bind only once for generation
+      trx.input('company_id', params.company_id);
+      trx.input('branch_id', params.branch_id);
       trx.input('CurrDatea', params.BillDate || new Date());
 
       const billNoGenerationSql = `
-        DECLARE @Year VARCHAR(20);  
-        DECLARE @ShortName VARCHAR(20);  
+        DECLARE @Year VARCHAR(20);
+        DECLARE @ShortName VARCHAR(20);
         DECLARE @CurrentSaleCode VARCHAR(20) = '0';
         DECLARE @BillNo VARCHAR(100);
-        
-        -- Generate Financial Year
-        SELECT @Year = (
-          CASE 
-            WHEN (MONTH(@CurrDatea)) <= 3 THEN 
-              CONVERT(VARCHAR(4), YEAR(@CurrDatea) - 1) + '-' + CONVERT(VARCHAR(4), YEAR(@CurrDatea) % 100)  
-            ELSE 
-              CONVERT(VARCHAR(4), YEAR(@CurrDatea)) + '-' + CONVERT(VARCHAR(4), (YEAR(@CurrDatea) % 100) + 1)
-          END
-        );
-        
-        -- Get Company Short Name
-        SELECT TOP 1 @ShortName = ShortName FROM tbl_company WHERE Id = @comp_id;
-        
-        -- Get Last Sale Code for this company/branch/year
+
+        -- Determine financial year suffix
+        SELECT @Year = CASE
+          WHEN MONTH(@CurrDatea) <= 3 THEN
+            CONVERT(VARCHAR(4), YEAR(@CurrDatea) - 1) + '-' + RIGHT(CONVERT(VARCHAR(4), YEAR(@CurrDatea)), 2)
+          ELSE
+            CONVERT(VARCHAR(4), YEAR(@CurrDatea)) + '-' + RIGHT(CONVERT(VARCHAR(4), YEAR(@CurrDatea) + 1), 2)
+        END;
+
+        -- Get company short name
+        SELECT TOP 1 @ShortName = ShortName
+        FROM tbl_company
+        WHERE Id = @company_id;
+
+        -- Get last code from MonthlyBillHead
         SELECT TOP 1 @CurrentSaleCode = COALESCE(
           NULLIF(
             SUBSTRING(
-              BillNo, 
-              CHARINDEX('/', BillNo) + 1, 
-              CHARINDEX('/', BillNo, CHARINDEX('/', BillNo) + 1) - CHARINDEX('/', BillNo) - 1
-            ), ''
-          ), '0'
-        ) 
-        FROM tbl_booking_entry 
-        WHERE company_id = @comp_id 
-          AND branch_id = @branch_id
-          AND SUBSTRING(BillNo, CHARINDEX('/', BillNo, CHARINDEX('/', BillNo) + 1) + 1, LEN(BillNo)) = @Year
+              BillNo,
+              CHARINDEX('/', BillNo) + 1,
+              CHARINDEX('/', BillNo, CHARINDEX('/', BillNo) + 1)
+                - CHARINDEX('/', BillNo) - 1
+            ),
+            ''
+          ),
+          '0'
+        )
+        FROM MonthlyBillHead
+        WHERE company_id = @company_id
+          AND branch_id  = @branch_id
+          AND RIGHT(BillNo, LEN(@Year)) = @Year
         ORDER BY id DESC;
-        
-        -- Generate New Bill Number
-        SET @BillNo = CONCAT(@ShortName, '/', (CAST(@CurrentSaleCode AS INT) + 1), '/', @Year);
-        
+
+        -- Build new bill number
+        SET @BillNo = CONCAT(@ShortName, '/', CAST(CAST(@CurrentSaleCode AS INT) + 1 AS VARCHAR), '/', @Year);
+
         SELECT @BillNo AS BillNo;
       `;
 
@@ -163,9 +166,9 @@ exports.createMonthlyBill = async (params) => {
       billNo = billResult.recordset?.[0]?.BillNo || null;
     }
 
-    // Now bind the main parameters (excluding the ones already bound above)
+    // Bind remaining parameters (exclude company_id & branch_id already bound)
     const bindList = [
-      'taxtype', 'BillDate', 'company_id', 'parent_company_id', 'city_id', 'party_id',
+      'taxtype', 'BillDate', 'parent_company_id', 'city_id', 'party_id',
       'GrossAmount', 'OtherCharges', 'IGSTPer', 'CGSTPer', 'SGSTPer', 'IGST', 'CGST', 'SGST', 'OtherCharges2',
       'round_off', 'Advance', 'Discount', 'NetAmount', 'user_id', 'rcm', 'monthly_duty_id', 'fixed_amount',
       'no_of_days', 'fixed_amount_total', 'extra_hours', 'extra_hours_rate', 'extra_hours_amount',
@@ -179,9 +182,10 @@ exports.createMonthlyBill = async (params) => {
       trx.input(key, params[key] ?? null);
     }
 
-    // Bind BillNo separately
+    // Bind BillNo
     trx.input('BillNo', billNo);
 
+    // Insert head record
     const insertHeadSql = `
       INSERT INTO MonthlyBillHead (
         BillNo, taxtype, BillDate, company_id, parent_company_id, branch_id, city_id, party_id,
@@ -208,11 +212,12 @@ exports.createMonthlyBill = async (params) => {
     const headInsertResult = await trx.query(insertHeadSql);
     const newId = headInsertResult.recordset?.[0].id;
 
+    // Insert map records
     const dutyIds = Array.isArray(params.duty_ids) ? params.duty_ids : [];
     if (dutyIds.length) {
       const values = dutyIds
-        .map((bid) => `(${Number(bid)}, ${newId}, @company_id, @user_id)`)
-        .join(",\n");
+        .map(bid => `(${Number(bid)}, ${newId}, ${params.company_id}, ${params.user_id})`)
+        .join(',\n');
 
       const mapSql = `
         INSERT INTO MonthlyBillMap (booking_id, booking_entry_id, company_id, user_id)
@@ -222,6 +227,8 @@ exports.createMonthlyBill = async (params) => {
       await trx.query(mapSql);
     }
 
-    return { id: newId, billNo: billNo };
+    return { id: newId, billNo };
   });
 };
+
+
