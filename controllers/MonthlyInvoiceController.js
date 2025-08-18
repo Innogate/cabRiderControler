@@ -26,18 +26,23 @@ exports.getMBookingList = async (params) => {
   const result = await pdo.execute({
     sqlQuery: `
     SELECT * 
-    FROM dbo.booking_details bd 
-    WHERE bd.Party = @party_id 
-      AND bd.branch_id = @branch_id
-      AND bd.FromCityID = @from_city_id 
-      AND bd.company_id = @company_id 
-      AND bd.BookingStatus = 'Closed' 
-      AND NOT EXISTS (
-          SELECT 1 
-          FROM tbl_booking_entry_map bem 
-          WHERE bem.booking_id = bd.id
-      );
-  `,
+FROM dbo.booking_details bd 
+WHERE bd.Party = @party_id 
+  AND bd.branch_id = @branch_id
+  AND bd.FromCityID = @from_city_id 
+  AND bd.company_id = @company_id 
+  AND bd.BookingStatus = 'Closed' 
+  AND NOT EXISTS (
+      SELECT 1 
+      FROM tbl_booking_entry_map bem 
+      WHERE bem.booking_id = bd.id
+  )
+  AND NOT EXISTS (
+      SELECT 1 
+      FROM MonthlyBillMap mbm
+      WHERE mbm.booking_id = bd.id
+  )
+`,
     params: {
       party_id: party_id,
       branch_id: branch_id,
@@ -101,28 +106,85 @@ WHERE
 };
 
 exports.createMonthlyBill = async (params) => {
+  params.AutoBill = 1;
   const pdo = new PDO();
-
   return await pdo.executeInTransaction(async (trx) => {
-    // Bind only the fields used in the INSERT below
+
+    let billNo = null;
+
+    if (params.AutoBill === 1) {
+      // Bind parameters for bill generation first
+      trx.input('comp_id', params.company_id);
+      trx.input('branch_id', params.branch_id);  
+      trx.input('CurrDatea', params.BillDate || new Date());
+
+      const billNoGenerationSql = `
+        DECLARE @Year VARCHAR(20);  
+        DECLARE @ShortName VARCHAR(20);  
+        DECLARE @CurrentSaleCode VARCHAR(20) = '0';
+        DECLARE @BillNo VARCHAR(100);
+        
+        -- Generate Financial Year
+        SELECT @Year = (
+          CASE 
+            WHEN (MONTH(@CurrDatea)) <= 3 THEN 
+              CONVERT(VARCHAR(4), YEAR(@CurrDatea) - 1) + '-' + CONVERT(VARCHAR(4), YEAR(@CurrDatea) % 100)  
+            ELSE 
+              CONVERT(VARCHAR(4), YEAR(@CurrDatea)) + '-' + CONVERT(VARCHAR(4), (YEAR(@CurrDatea) % 100) + 1)
+          END
+        );
+        
+        -- Get Company Short Name
+        SELECT TOP 1 @ShortName = ShortName FROM tbl_company WHERE Id = @comp_id;
+        
+        -- Get Last Sale Code for this company/branch/year
+        SELECT TOP 1 @CurrentSaleCode = COALESCE(
+          NULLIF(
+            SUBSTRING(
+              BillNo, 
+              CHARINDEX('/', BillNo) + 1, 
+              CHARINDEX('/', BillNo, CHARINDEX('/', BillNo) + 1) - CHARINDEX('/', BillNo) - 1
+            ), ''
+          ), '0'
+        ) 
+        FROM tbl_booking_entry 
+        WHERE company_id = @comp_id 
+          AND branch_id = @branch_id
+          AND SUBSTRING(BillNo, CHARINDEX('/', BillNo, CHARINDEX('/', BillNo) + 1) + 1, LEN(BillNo)) = @Year
+        ORDER BY id DESC;
+        
+        -- Generate New Bill Number
+        SET @BillNo = CONCAT(@ShortName, '/', (CAST(@CurrentSaleCode AS INT) + 1), '/', @Year);
+        
+        SELECT @BillNo AS BillNo;
+      `;
+
+      const billResult = await trx.query(billNoGenerationSql);
+      billNo = billResult.recordset?.[0]?.BillNo || null;
+    }
+
+    // Now bind the main parameters (excluding the ones already bound above)
     const bindList = [
-      'taxtype','BillDate','company_id','parent_company_id','branch_id','city_id','party_id',
-      'GrossAmount','OtherCharges','IGSTPer','CGSTPer','SGSTPer','IGST','CGST','SGST','OtherCharges2',
-      'round_off','Advance','Discount','NetAmount','user_id','rcm','monthly_duty_id','fixed_amount',
-      'no_of_days','fixed_amount_total','extra_hours','extra_hours_rate','extra_hours_amount',
-      'extra_km','extra_km_rate','extra_km_amount','except_day_hrs','except_day_hrs_rate',
-      'except_day_hrs_amount','except_day_km','except_day_km_rate','except_day_km_amount',
-      'fuel_amount','mobil_amount','parking_amount','night_amount','outstation_amount','proportionate',
-      'bill_total','amount_payable','remarks','Invcancel','InvcancelOn','Invcancelby','InvcancelReason'
+      'taxtype', 'BillDate', 'company_id', 'parent_company_id', 'city_id', 'party_id',
+      'GrossAmount', 'OtherCharges', 'IGSTPer', 'CGSTPer', 'SGSTPer', 'IGST', 'CGST', 'SGST', 'OtherCharges2',
+      'round_off', 'Advance', 'Discount', 'NetAmount', 'user_id', 'rcm', 'monthly_duty_id', 'fixed_amount',
+      'no_of_days', 'fixed_amount_total', 'extra_hours', 'extra_hours_rate', 'extra_hours_amount',
+      'extra_km', 'extra_km_rate', 'extra_km_amount', 'except_day_hrs', 'except_day_hrs_rate',
+      'except_day_hrs_amount', 'except_day_km', 'except_day_km_rate', 'except_day_km_amount',
+      'fuel_amount', 'mobil_amount', 'parking_amount', 'night_amount', 'outstation_amount', 'proportionate',
+      'bill_total', 'amount_payable', 'remarks', 'Invcancel', 'InvcancelOn', 'Invcancelby', 'InvcancelReason'
     ];
 
     for (const key of bindList) {
       trx.input(key, params[key] ?? null);
     }
 
+    // Bind BillNo separately
+    trx.input('BillNo', billNo);
+
     const insertHeadSql = `
       INSERT INTO MonthlyBillHead (
-        taxtype, BillDate, company_id, parent_company_id, branch_id, city_id, party_id,
+        BillNo, taxtype, BillDate, company_id, parent_company_id, branch_id, city_id, party_id,
         GrossAmount, OtherCharges, IGSTPer, CGSTPer, SGSTPer, IGST, CGST, SGST, OtherCharges2,
         round_off, Advance, Discount, NetAmount, user_id, rcm, monthly_duty_id, fixed_amount,
         no_of_days, fixed_amount_total, extra_hours, extra_hours_rate, extra_hours_amount,
@@ -131,7 +193,7 @@ exports.createMonthlyBill = async (params) => {
         fuel_amount, mobil_amount, parking_amount, night_amount, outstation_amount, proportionate,
         bill_total, amount_payable, remarks, Invcancel, InvcancelOn, Invcancelby, InvcancelReason
       ) VALUES (
-        @taxtype, @BillDate, @company_id, @parent_company_id, @branch_id, @city_id, @party_id,
+        @BillNo, @taxtype, @BillDate, @company_id, @parent_company_id, @branch_id, @city_id, @party_id,
         @GrossAmount, @OtherCharges, @IGSTPer, @CGSTPer, @SGSTPer, @IGST, @CGST, @SGST, @OtherCharges2,
         @round_off, @Advance, @Discount, @NetAmount, @user_id, @rcm, @monthly_duty_id, @fixed_amount,
         @no_of_days, @fixed_amount_total, @extra_hours, @extra_hours_rate, @extra_hours_amount,
@@ -146,10 +208,8 @@ exports.createMonthlyBill = async (params) => {
     const headInsertResult = await trx.query(insertHeadSql);
     const newId = headInsertResult.recordset?.[0].id;
 
-    // 2) Insert mappings
     const dutyIds = Array.isArray(params.duty_ids) ? params.duty_ids : [];
     if (dutyIds.length) {
-      // Build a single VALUES block for efficiency
       const values = dutyIds
         .map((bid) => `(${Number(bid)}, ${newId}, @company_id, @user_id)`)
         .join(",\n");
@@ -162,6 +222,6 @@ exports.createMonthlyBill = async (params) => {
       await trx.query(mapSql);
     }
 
-    return { id: newId };
+    return { id: newId, billNo: billNo };
   });
 };

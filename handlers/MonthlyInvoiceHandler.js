@@ -63,9 +63,9 @@ class MInvoiceHandler extends WebSocketHandler {
     };
     const result = await createMonthlyBill(payload);
     this.send({
-      // type: "success",
-      for: "minvoice.createMonthlyBillingx",
-      // msg: "Billing form created successfully",
+      type: "success",
+      for: "createMonthlyBilling",
+      msg: "Billing form created successfully",
       data: result, 
     });
   }
