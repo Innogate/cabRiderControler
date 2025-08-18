@@ -44,22 +44,14 @@ exports.getAllGlList = async (params) => {
   }
 };
 
-exports.getAllGlTypes = async (params) => {
-  const {
-    GLName,
-    GLType,
-    company_id,
-    CreatedBy,
-    CreatedAt,
-    UpdatedAt,
-    UpdatedBy,
-  } = params;
 
+exports.getAllGlTypes = async (params) => {
   try {
     const pdo = new PDO();
     const result = await pdo.execute({
       sqlQuery: `
-    insert into 
+    SELECT *
+    FROM GlTypes
   `,
     });
     const totalCountResult = await pdo.execute({
