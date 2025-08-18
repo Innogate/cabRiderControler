@@ -3,7 +3,7 @@ const PDO = require("../core/pod.js");
 
 exports.getAllGlList = async (params) => {
   try {
-    const { page, pageSize, company_id } = params; // default pagination
+    const { page, pageSize, company_id } = params;
     const offset = (page - 1) * pageSize;
     const pdo = new PDO();
     // Get paginated data
@@ -32,7 +32,6 @@ exports.getAllGlList = async (params) => {
       TotalPages: Math.ceil(totalCount / pageSize),
     };
   } catch (error) {
-    console.error("Error fetching GL List:", error);
     return {
       data: [],
       StatusID: 0,
