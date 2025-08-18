@@ -41,7 +41,10 @@ const {
   updateGuest,
   createGuest,
 } = require("../controllers/guestMasterController");
-const { getAllGlList } = require("../controllers/glMasterController");
+const {
+  getAllGlList,
+  getAllGlTypes,
+} = require("../controllers/glMasterController");
 
 class MasterHandler extends WebSocketHandler {
   constructor() {
@@ -647,6 +650,26 @@ class MasterHandler extends WebSocketHandler {
     if (result) {
       this.send({
         for: "getAllGlList",
+        ...result,
+      });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+  async getAllGlTypeDropdown() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+    };
+    const result = await getAllGlTypes(params);
+    if (result) {
+      this.send({
+        for: "getAllGlTypes",
         ...result,
       });
     } else {
