@@ -44,6 +44,7 @@ const {
 const {
   getAllGlList,
   getAllGlTypes,
+  createGl,
 } = require("../controllers/glMasterController");
 
 class MasterHandler extends WebSocketHandler {
@@ -677,6 +678,45 @@ class MasterHandler extends WebSocketHandler {
         msg: "No data found",
         type: "warning",
         ...result,
+      });
+    }
+  }
+
+  async createGlMaster() {
+    this.requireAuth();
+
+    try {
+      const params = {
+        ...this.body,
+        company_id: this._user.company_id,
+        user_id: this._user.Id,
+      };
+
+      const result = await createGl(params);
+
+      if (result?.StatusID === 1) {
+        this.send({ msg: result.StatusMessage, type: "success" });
+
+        this.broadcastTo(
+          {
+            for: "createGl",
+            StatusID: result.StatusID,
+            data: result.data || null,
+          },
+          { company_id: this._user.company_id }
+        );
+      } else {
+        this.send({
+          msg: result?.msg || "Something went wrong",
+          type: "warning",
+          ...result,
+        });
+      }
+    } catch (error) {
+      this.send({
+        msg: "An unexpected error occurred. Please try again.",
+        type: "error",
+        error: error.message || error,
       });
     }
   }

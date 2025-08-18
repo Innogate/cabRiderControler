@@ -45,12 +45,21 @@ exports.getAllGlList = async (params) => {
 };
 
 exports.getAllGlTypes = async (params) => {
+  const {
+    GLName,
+    GLType,
+    company_id,
+    CreatedBy,
+    CreatedAt,
+    UpdatedAt,
+    UpdatedBy,
+  } = params;
+
   try {
     const pdo = new PDO();
     const result = await pdo.execute({
       sqlQuery: `
-    SELECT *
-    FROM GlTypes
+    insert into 
   `,
     });
     const totalCountResult = await pdo.execute({
@@ -62,6 +71,44 @@ exports.getAllGlTypes = async (params) => {
       data: result,
       StatusID: 1,
       StatusMessage: "Data fetched successfully",
+      TotalCount: totalCount,
+    };
+  } catch (error) {
+    return {
+      data: [],
+      StatusID: 0,
+      StatusMessage: error.message,
+      TotalCount: 0,
+    };
+  }
+};
+
+exports.createGl = async (params) => {
+  const { GLName, GLType, company_id, user_id } = params;
+
+  try {
+    const pdo = new PDO();
+    const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+    // Insert new record
+    const result = await pdo.execute({
+      sqlQuery: `
+        INSERT INTO GlTypes 
+        (GLName, GLType, company_id, CreatedBy, CreatedAt, UpdatedBy, UpdatedAt)
+        VALUES 
+        (${GLName}, ${GLType}, ${company_id}, ${user_id}, ${now}, ${user_id}, ${now})
+      `,
+    });
+
+    const totalCountResult = await pdo.execute({
+      sqlQuery: `SELECT COUNT(*) as TotalCount FROM GlTypes`,
+    });
+
+    const totalCount = totalCountResult[0]?.TotalCount || 0;
+
+    return {
+      data: result,
+      StatusID: 1,
+      StatusMessage: "Data inserted successfully",
       TotalCount: totalCount,
     };
   } catch (error) {
