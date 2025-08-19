@@ -115,3 +115,95 @@ exports.getPartyMasterById = async (params) => {
     ttl: 300,
   });
 }
+
+
+exports.getOtherChargesUsingId = async (params) => {
+  const { booking_entry_id } = params;
+  const pdo = new PDO();
+
+  if (!booking_entry_id) {
+    throw new Error("booking_entry_id is required");
+  }
+
+  // 🔹 Step 1: Fetch booking_ids from MonthlyBillMap
+  const sqlBookingIds = `
+    SELECT mbm.booking_id
+    FROM MonthlyBillMap mbm
+    JOIN tbl_booking_charge_summery bd 
+      ON mbm.booking_id = bd.id
+    WHERE mbm.booking_entry_id = @entryId
+  `;
+
+  const bookingRows = await pdo.execute({
+    sqlQuery: sqlBookingIds,
+    params: { entryId: booking_entry_id },
+    ttl: 300,
+  });
+
+  const booking_ids = bookingRows.map((row) => row.booking_id);
+
+  if (!Array.isArray(booking_ids) || booking_ids.length === 0) {
+    throw new Error("No booking_ids found for given booking_entry_id");
+  }
+
+  // 🔹 Step 2: Build IN clause dynamically
+  const paramNames = booking_ids.map((_, index) => `@id${index}`);
+  const inClause = paramNames.join(", ");
+  const sqlParams = {};
+  booking_ids.forEach((id, index) => {
+    sqlParams[`id${index}`] = id;
+  });
+
+  // 🔹 Step 3: Queries for taxable & non-taxable
+  const sqlTaxable = `
+    SELECT 
+      charges_mast.charge_name,
+      charges_mast.taxable,
+      charges_mast.company_id,
+      charges_mast.TallyName,
+      SUM(tbl_booking_charge_summery.Amount) AS total_amount
+    FROM charges_mast
+    JOIN tbl_booking_charge_summery 
+      ON charges_mast.id = tbl_booking_charge_summery.ChargeId
+    WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
+      AND charges_mast.taxable = 'Y'
+    GROUP BY 
+      charges_mast.charge_name,
+      charges_mast.taxable,
+      charges_mast.company_id,
+      charges_mast.TallyName
+    ORDER BY charges_mast.charge_name;
+  `;
+
+  const sqlNonTaxable = `
+    SELECT 
+      charges_mast.charge_name,
+      charges_mast.taxable,
+      charges_mast.company_id,
+      charges_mast.TallyName,
+      SUM(tbl_booking_charge_summery.Amount) AS total_amount
+    FROM charges_mast
+    JOIN tbl_booking_charge_summery 
+      ON charges_mast.id = tbl_booking_charge_summery.ChargeId
+    WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
+      AND charges_mast.taxable = 'N'
+    GROUP BY 
+      charges_mast.charge_name,
+      charges_mast.taxable,
+      charges_mast.company_id,
+      charges_mast.TallyName
+    ORDER BY charges_mast.charge_name;
+  `;
+
+  // 🔹 Step 4: Execute both queries
+  const [taxable, nonTaxable] = await Promise.all([
+    pdo.execute({ sqlQuery: sqlTaxable, params: sqlParams, ttl: 300 }),
+    pdo.execute({ sqlQuery: sqlNonTaxable, params: sqlParams, ttl: 300 }),
+  ]);
+
+  // 🔹 Step 5: Return result
+  return {
+    taxable,
+    nonTaxable,
+  };
+};
