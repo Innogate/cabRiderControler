@@ -231,4 +231,21 @@ exports.createMonthlyBill = async (params) => {
   });
 };
 
+exports.getBookingsListByMID = async (params) => {
+  const { booking_entry_id = 0 } = params;
+  const pdo = new PDO();
+  const sqlQuery = `SELECT TOP 100 *
+FROM MonthlyBillMap AS mbm
+JOIN booking_details AS bk ON bk.id = mbm.booking_id
+WHERE mbm.booking_entry_id = @booking_entry_id
+ORDER BY mbm.id DESC;`;
+  const result = await pdo.execute({
+    sqlQuery,
+    params: { booking_entry_id: booking_entry_id },
+    ttl: 300,
+  });
+  return result;
+}
+
+
 
