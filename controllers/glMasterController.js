@@ -44,7 +44,6 @@ exports.getAllGlList = async (params) => {
   }
 };
 
-
 exports.getAllGlTypes = async (params) => {
   try {
     const pdo = new PDO();
@@ -95,7 +94,8 @@ exports.createGl = async (params) => {
     });
 
     const totalCountResult = await pdo.execute({
-      sqlQuery: `SELECT COUNT(*) as TotalCount FROM GLMast`,
+      sqlQuery: `SELECT COUNT(*) as TotalCount FROM GLMast WHERE company_id = @company_id`,
+      params: { company_id },
     });
 
     const totalCount = totalCountResult[0]?.TotalCount || 0;
@@ -104,6 +104,61 @@ exports.createGl = async (params) => {
       data: result[0], // returning inserted record
       StatusID: 1,
       StatusMessage: "GL Create successfully",
+      TotalCount: totalCount,
+    };
+  } catch (error) {
+    return {
+      data: [],
+      StatusID: 0,
+      StatusMessage: error.message,
+      TotalCount: 0,
+    };
+  }
+};
+
+exports.updateGl = async (params) => {
+  const { id, GLName, GLType, company_id, user_id } = params;
+
+  try {
+    const pdo = new PDO();
+    const now = new Date();
+
+    // Update record and return updated row
+    const result = await pdo.execute({
+      sqlQuery: `
+        UPDATE GLMast
+        SET 
+          GLName = @GLName,
+          GLType = @GLType,
+          company_id = @company_id,
+          UpdatedBy = @user_id,
+          UpdatedAt = @now
+        OUTPUT INSERTED.*
+        WHERE id = @id
+      `,
+      params: { id, GLName, GLType, company_id, user_id, now },
+    });
+
+    if (!result.length) {
+      return {
+        data: [],
+        StatusID: 0,
+        StatusMessage: "GL not found or no changes applied",
+        TotalCount: 0,
+      };
+    }
+
+    const totalCountResult = await pdo.execute({
+      sqlQuery: `SELECT COUNT(*) as TotalCount FROM GLMast WHERE company_id = @company_id`,
+      params: { company_id },
+    });
+
+    const totalCount = totalCountResult[0]?.TotalCount || 0;
+
+    return {
+      data: result[0], // returning updated record
+      StatusID: 1,
+      StatusMessage: "GL updated successfully",
       TotalCount: totalCount,
     };
   } catch (error) {

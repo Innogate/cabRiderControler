@@ -45,6 +45,7 @@ const {
   getAllGlList,
   getAllGlTypes,
   createGl,
+  updateGl,
 } = require("../controllers/glMasterController");
 
 class MasterHandler extends WebSocketHandler {
@@ -700,6 +701,45 @@ class MasterHandler extends WebSocketHandler {
         this.broadcastTo(
           {
             for: "createGl",
+            StatusID: result.StatusID,
+            data: result.data || null,
+          },
+          { company_id: this._user.company_id }
+        );
+      } else {
+        this.send({
+          msg: result?.msg || "Something went wrong",
+          type: "warning",
+          ...result,
+        });
+      }
+    } catch (error) {
+      this.send({
+        msg: "An unexpected error occurred. Please try again.",
+        type: "error",
+        error: error.message || error,
+      });
+    }
+  }
+
+  async updateGlMaster() {
+    this.requireAuth();
+
+    try {
+      const params = {
+        ...this.body,
+        company_id: this._user.company_id,
+        user_id: this._user.Id,
+      };
+
+      const result = await updateGl(params);
+
+      if (result?.StatusID === 1) {
+        this.send({ msg: result.StatusMessage, type: "success" });
+
+        this.broadcastTo(
+          {
+            for: "updateGl",
             StatusID: result.StatusID,
             data: result.data || null,
           },
