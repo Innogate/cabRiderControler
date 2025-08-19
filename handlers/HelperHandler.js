@@ -1,5 +1,5 @@
 const WebSocketHandler = require("../core/WebSocketHandler.js");
-const { getPartyListDropdown, getBranchDropdownList, getCompanyDropdownList, getPartyMasterById, getOtherCharges } = require("../controllers/MasterHelperController.js");
+const { getPartyListDropdown, getBranchDropdownList, getCompanyDropdownList, getPartyMasterById, getOtherCharges,getOtherChargesUsingId } = require("../controllers/MasterHelperController.js");
 
 class HelperHandler extends WebSocketHandler {
     constructor() {
@@ -73,6 +73,26 @@ class HelperHandler extends WebSocketHandler {
             data: result,
         });
     }
+
+    async getOtherChargesForMonthlyInvoice() {
+    this.requireAuth();
+
+    // Extract booking_entry_id from request body
+    const { booking_entry_id } = this.body;
+
+    if (!booking_entry_id) {
+        throw new Error("booking_entry_id is required");
+    }
+
+    // Call service with only booking_entry_id
+    const result = await getOtherChargesUsingId({ booking_entry_id });
+
+    this.send({
+        for: "getOtherChargesForMonthlyInvoice",
+        data: result,
+    });
+}
+
 }
 
 module.exports = new HelperHandler();
