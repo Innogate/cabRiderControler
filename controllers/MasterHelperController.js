@@ -259,6 +259,7 @@ JOIN tbl_booking_charge_summery
 WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
   AND charges_mast.taxable = 'Y'
 ORDER BY charges_mast.charge_name;
+
   `;
 
 
@@ -298,6 +299,7 @@ exports.getOtherNonTaxableChargesUsingId = async (params) => {
   });
 
   const booking_ids = bookingRows.map((row) => row.booking_id);
+  console.log("Booking IDs:", booking_ids);
 
   if (!Array.isArray(booking_ids) || booking_ids.length === 0) {
     throw new Error("No booking_ids found for given booking_entry_id");
@@ -325,6 +327,7 @@ JOIN tbl_booking_charge_summery
 WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
   AND charges_mast.taxable = 'N'
 ORDER BY charges_mast.charge_name;
+
   `;
 
 
