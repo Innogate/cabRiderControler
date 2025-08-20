@@ -252,10 +252,13 @@ exports.getOtherTaxableChargesUsingId = async (params) => {
     charges_mast.taxable,
     charges_mast.company_id,
     charges_mast.TallyName,
-    tbl_booking_charge_summery.Amount AS total_amount
+    tbl_booking_charge_summery.Amount AS total_amount,
+    tbl_booking_charge_summery.BookingId ,
+    booking_details.SlipNo
 FROM charges_mast
 JOIN tbl_booking_charge_summery 
     ON charges_mast.id = tbl_booking_charge_summery.ChargeId
+    JOIN booking_details ON booking_details.id = tbl_booking_charge_summery.BookingId
 WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
   AND charges_mast.taxable = 'Y'
 ORDER BY charges_mast.charge_name;
@@ -315,15 +318,18 @@ exports.getOtherNonTaxableChargesUsingId = async (params) => {
 
   // 🔹 Step 3: Queries for taxable & non-taxable
   const sqlNonTaxable = `
- SELECT 
+  SELECT 
     charges_mast.charge_name,
     charges_mast.taxable,
     charges_mast.company_id,
     charges_mast.TallyName,
-    tbl_booking_charge_summery.Amount AS total_amount
+    tbl_booking_charge_summery.Amount AS total_amount,
+    tbl_booking_charge_summery.BookingId ,
+    booking_details.SlipNo
 FROM charges_mast
 JOIN tbl_booking_charge_summery 
     ON charges_mast.id = tbl_booking_charge_summery.ChargeId
+    JOIN booking_details ON booking_details.id = tbl_booking_charge_summery.BookingId
 WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
   AND charges_mast.taxable = 'N'
 ORDER BY charges_mast.charge_name;
