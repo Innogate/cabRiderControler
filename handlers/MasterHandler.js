@@ -16,7 +16,8 @@ const {
   create_update_driver,
 } = require("../controllers/driverMasterController");
 const {
-  getAllDriverSalarySetupList, createDriverSalarySetupList
+  getAllDriverSalarySetupList,
+  createDriverSalarySetupList,
 } = require("../controllers/driverSalarySetupMasterController");
 const {
   getAllPartyRateList,
@@ -27,9 +28,25 @@ const {
   createUpdateParty,
 } = require("../controllers/partyMasterController");
 const { gateAllVendor } = require("../controllers/vendorMasterController");
-const { getAllUserList, createUpdateUser } = require("../controllers/userMasterController")
-const { getAllMonthlyDuty, createUpdateMonthlyDuty } = require("../controllers/monthlyDutyMasterController")
-const { getAllGuest, updateGuest, createGuest } = require("../controllers/guestMasterController");
+const {
+  getAllUserList,
+  createUpdateUser,
+} = require("../controllers/userMasterController");
+const {
+  getAllMonthlyDuty,
+  createUpdateMonthlyDuty,
+} = require("../controllers/monthlyDutyMasterController");
+const {
+  getAllGuest,
+  updateGuest,
+  createGuest,
+} = require("../controllers/guestMasterController");
+const {
+  getAllGlList,
+  getAllGlTypes,
+  createGl,
+  updateGl,
+} = require("../controllers/glMasterController");
 
 class MasterHandler extends WebSocketHandler {
   constructor() {
@@ -68,19 +85,25 @@ class MasterHandler extends WebSocketHandler {
     };
     const result = await createCartype(params);
     if (result.StatusID === 1) {
-      this.send({ msg: "Data Insert Updated", type: "success" })
-      this.broadcastTo({
-        for: "CarTypeAddUpdate",
-        StatusID: result.StatusID,
-        data: result.data
-      }, { company_id: this._user.company_id });
+      this.send({ msg: "Data Insert Updated", type: "success" });
+      this.broadcastTo(
+        {
+          for: "CarTypeAddUpdate",
+          StatusID: result.StatusID,
+          data: result.data,
+        },
+        { company_id: this._user.company_id }
+      );
     } else if (result.StatusID === 2) {
-      this.send({ msg: "Cartype name alrady exit", type: "error" })
-      this.broadcastTo({
-        for: "CarTypeAddUpdate",
-        StatusID: result.StatusID,
-        data: result.data
-      }, { company_id: this._user.company_id });
+      this.send({ msg: "Cartype name alrady exit", type: "error" });
+      this.broadcastTo(
+        {
+          for: "CarTypeAddUpdate",
+          StatusID: result.StatusID,
+          data: result.data,
+        },
+        { company_id: this._user.company_id }
+      );
     } else {
       this.send({
         msg: "No data found",
@@ -98,12 +121,15 @@ class MasterHandler extends WebSocketHandler {
 
     const result = await deleteCartype(params);
     if (result) {
-      this.send({ msg: "Delete Data", type: "success" })
-      this.broadcastTo({
-        for: "CarTypeDel",
-        StatusID: result.StatusID,
-        data: result.data || null
-      }, { company_id: this._user.company_id });
+      this.send({ msg: "Delete Data", type: "success" });
+      this.broadcastTo(
+        {
+          for: "CarTypeDel",
+          StatusID: result.StatusID,
+          data: result.data || null,
+        },
+        { company_id: this._user.company_id }
+      );
     } else {
       this.send({
         msg: "No data found",
@@ -154,7 +180,7 @@ class MasterHandler extends WebSocketHandler {
           {
             for: "chargesAddUpdate",
             StatusID: result.StatusID,
-            data: result.data || null
+            data: result.data || null,
           },
           { company_id: this._user.company_id }
         );
@@ -162,15 +188,14 @@ class MasterHandler extends WebSocketHandler {
         this.send({
           msg: result?.msg || "Something went wrong",
           type: "warning",
-          ...result
+          ...result,
         });
       }
-
     } catch (error) {
       this.send({
         msg: "An unexpected error occurred. Please try again.",
         type: "error",
-        error: error.message || error
+        error: error.message || error,
       });
     }
   }
@@ -228,12 +253,15 @@ class MasterHandler extends WebSocketHandler {
     };
     const result = await create_update_driver(params);
     if (result.StatusID === 1) {
-      this.send({ msg: result.StatusMessage, type: "success" })
-      this.broadcastTo({
-        for: "CreateUpdateDriver",
-        StatusID: result.StatusID,
-        data: result.data || null
-      }, { company_id: this._user.company_id });
+      this.send({ msg: result.StatusMessage, type: "success" });
+      this.broadcastTo(
+        {
+          for: "CreateUpdateDriver",
+          StatusID: result.StatusID,
+          data: result.data || null,
+        },
+        { company_id: this._user.company_id }
+      );
     } else {
       this.send({
         msg: "No data found",
@@ -274,16 +302,19 @@ class MasterHandler extends WebSocketHandler {
     };
     const result = await createDriverSalarySetupList(params);
     if (result) {
-      this.broadcastTo({
-        for: "createDriverSalarySetupList",
-        ...result,
-      }, { company_id: this._user.company_id });
+      this.broadcastTo(
+        {
+          for: "createDriverSalarySetupList",
+          ...result,
+        },
+        { company_id: this._user.company_id }
+      );
     } else {
       this.send({
         msg: "No data found",
         type: "warning",
         ...result,
-      })
+      });
     }
   }
 
@@ -316,8 +347,8 @@ class MasterHandler extends WebSocketHandler {
       ...this.body,
       postJsonData: JSON.stringify(this.body.postJsonData), // 👈 serialize it
       company_id: this._user.company_id,
-      user_id: this._user.Id
-    }
+      user_id: this._user.Id,
+    };
 
     console.log("params", params);
 
@@ -325,18 +356,20 @@ class MasterHandler extends WebSocketHandler {
     console.log("result", result);
 
     if (result) {
-      this.broadcastTo({
-        for: "createUpdatePartyRate",
-        ...result
-      }, { company_id: this._user.company_id });
+      this.broadcastTo(
+        {
+          for: "createUpdatePartyRate",
+          ...result,
+        },
+        { company_id: this._user.company_id }
+      );
     } else {
       this.send({
         StatusMessage: "Failed to add data",
-        data: result.data
+        data: result.data,
       });
     }
   }
-
 
   async gatAllParty() {
     this.requireAuth();
@@ -373,10 +406,13 @@ class MasterHandler extends WebSocketHandler {
       //   for: "createUpdateParty",
       //   ...result,
       // });
-      this.broadcastTo({
-        for: "createUpdateParty",
-        ...result
-      }, { company_id: this._user.company_id })
+      this.broadcastTo(
+        {
+          for: "createUpdateParty",
+          ...result,
+        },
+        { company_id: this._user.company_id }
+      );
     } else {
       this.send({
         msg: "No data found",
@@ -420,10 +456,13 @@ class MasterHandler extends WebSocketHandler {
     };
     const result = await createUpdateVendorMaster(params);
     if (result) {
-      this.broadcastTo({
-        for: "createUpdateVendorMaster",
-        ...result
-      }, { company_id: this._user.company_id })
+      this.broadcastTo(
+        {
+          for: "createUpdateVendorMaster",
+          ...result,
+        },
+        { company_id: this._user.company_id }
+      );
     } else {
       this.send({
         msg: "No data found",
@@ -478,23 +517,25 @@ class MasterHandler extends WebSocketHandler {
     }
   }
 
-
   // create update user master
   async createUpdateUserMaster() {
     this.requireAuth();
     const params = {
       ...this.body,
       user_id: this._user.Id,
-      company_id: this._user.company_id
-    }
+      company_id: this._user.company_id,
+    };
 
-    const result = await createUpdateUser(params)
+    const result = await createUpdateUser(params);
 
     if (result.StatusID === 1) {
-      this.broadcastTo({
-        for: "createUpdateUser",
-        ...result
-      }, { company_id: this._user.company_id })
+      this.broadcastTo(
+        {
+          for: "createUpdateUser",
+          ...result,
+        },
+        { company_id: this._user.company_id }
+      );
     } else {
       this.send({
         msg: result.StatusMessage,
@@ -503,10 +544,6 @@ class MasterHandler extends WebSocketHandler {
       });
     }
   }
-
-
-
-
 
   async getAllMonthlyDutyMaster() {
     this.requireAuth();
@@ -530,7 +567,6 @@ class MasterHandler extends WebSocketHandler {
     }
   }
 
-
   async createUpdateMonthlyDutyMaster() {
     this.requireAuth();
     const params = {
@@ -540,10 +576,13 @@ class MasterHandler extends WebSocketHandler {
     };
     const result = await createUpdateMonthlyDuty(params);
     if (result) {
-      this.broadcastTo({
-        for: "createUpdateMonthlyDuty",
-        ...result,
-      }, { company_id: this._user.company_id })
+      this.broadcastTo(
+        {
+          for: "createUpdateMonthlyDuty",
+          ...result,
+        },
+        { company_id: this._user.company_id }
+      );
     } else {
       this.send({
         StatusMessage: result.StatusMessage,
@@ -561,10 +600,13 @@ class MasterHandler extends WebSocketHandler {
     };
     const result = await createGuest(params);
     if (result) {
-      this.broadcastTo({
-        for: "createUpdateGuest",
-        ...result,
-      }, { company_id: this._user.company_id })
+      this.broadcastTo(
+        {
+          for: "createUpdateGuest",
+          ...result,
+        },
+        { company_id: this._user.company_id }
+      );
     } else {
       this.send({
         msg: result.StatusMessage,
@@ -573,7 +615,6 @@ class MasterHandler extends WebSocketHandler {
       });
     }
   }
-
 
   async updateGuestMaster() {
     this.requireAuth();
@@ -584,10 +625,13 @@ class MasterHandler extends WebSocketHandler {
     };
     const result = await updateGuest(params);
     if (result.StatusID === 1) {
-      this.broadcastTo({
-        for: "UpdateGuest",
-        ...result,
-      }, { company_id: this._user.company_id })
+      this.broadcastTo(
+        {
+          for: "UpdateGuest",
+          ...result,
+        },
+        { company_id: this._user.company_id }
+      );
     } else {
       this.send({
         StatusMessage: result.StatusMessage,
@@ -597,6 +641,125 @@ class MasterHandler extends WebSocketHandler {
     }
   }
 
+  async getAllGlMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await getAllGlList(params);
+    if (result) {
+      this.send({
+        for: "getAllGlList",
+        ...result,
+      });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+  async getAllGlTypeDropdown() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+    };
+    const result = await getAllGlTypes(params);
+    if (result) {
+      this.send({
+        for: "getAllGlTypes",
+        ...result,
+      });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+  async createGlMaster() {
+    this.requireAuth();
+
+    try {
+      const params = {
+        ...this.body,
+        company_id: this._user.company_id,
+        user_id: this._user.Id,
+      };
+
+      const result = await createGl(params);
+
+      if (result?.StatusID === 1) {
+        this.send({ msg: result.StatusMessage, type: "success" });
+
+        this.broadcastTo(
+          {
+            for: "createGl",
+            StatusID: result.StatusID,
+            data: result.data || null,
+          },
+          { company_id: this._user.company_id }
+        );
+      } else {
+        this.send({
+          msg: result?.msg || "Something went wrong",
+          type: "warning",
+          ...result,
+        });
+      }
+    } catch (error) {
+      this.send({
+        msg: "An unexpected error occurred. Please try again.",
+        type: "error",
+        error: error.message || error,
+      });
+    }
+  }
+
+  async updateGlMaster() {
+    this.requireAuth();
+
+    try {
+      const params = {
+        ...this.body,
+        company_id: this._user.company_id,
+        user_id: this._user.Id,
+      };
+
+      const result = await updateGl(params);
+
+      if (result?.StatusID === 1) {
+        this.send({ msg: result.StatusMessage, type: "success" });
+
+        this.broadcastTo(
+          {
+            for: "updateGl",
+            StatusID: result.StatusID,
+            data: result.data || null,
+          },
+          { company_id: this._user.company_id }
+        );
+      } else {
+        this.send({
+          msg: result?.msg || "Something went wrong",
+          type: "warning",
+          ...result,
+        });
+      }
+    } catch (error) {
+      this.send({
+        msg: "An unexpected error occurred. Please try again.",
+        type: "error",
+        error: error.message || error,
+      });
+    }
+  }
 }
 
 module.exports = new MasterHandler();
