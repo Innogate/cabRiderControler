@@ -1,5 +1,8 @@
 const WebSocketHandler = require("../core/WebSocketHandler.js");
-const { getPartyListDropdown, getBranchDropdownList, getCompanyDropdownList, getPartyMasterById, getOtherCharges,getOtherChargesUsingId } = require("../controllers/MasterHelperController.js");
+const { getPartyListDropdown, getBranchDropdownList, 
+        getCompanyDropdownList, getPartyMasterById, getOtherCharges, 
+        getOtherChargesUsingId, getOtherTaxableChargesUsingId, getOtherNonTaxableChargesUsingId
+ } = require("../controllers/MasterHelperController.js");
 
 class HelperHandler extends WebSocketHandler {
     constructor() {
@@ -62,7 +65,7 @@ class HelperHandler extends WebSocketHandler {
         });
     }
 
-    async getOtherChargesForBookingList(){
+    async getOtherChargesForBookingList() {
         this.requireAuth();
         const params = {
             ...this.body,
@@ -75,23 +78,62 @@ class HelperHandler extends WebSocketHandler {
     }
 
     async getOtherChargesForMonthlyInvoice() {
-    this.requireAuth();
+        this.requireAuth();
 
-    // Extract booking_entry_id from request body
-    const { booking_entry_id } = this.body;
+        // Extract booking_entry_id from request body
+        const { booking_entry_id } = this.body;
 
-    if (!booking_entry_id) {
-        throw new Error("booking_entry_id is required");
+        if (!booking_entry_id) {
+            throw new Error("booking_entry_id is required");
+        }
+
+        // Call service with only booking_entry_id
+        const result = await getOtherChargesUsingId({ booking_entry_id });
+
+        this.send({
+            for: "getOtherChargesForMonthlyInvoice",
+            data: result,
+        });
     }
 
-    // Call service with only booking_entry_id
-    const result = await getOtherChargesUsingId({ booking_entry_id });
 
-    this.send({
-        for: "getOtherChargesForMonthlyInvoice",
-        data: result,
-    });
-}
+    async getTaxableOtherChargesForMonthlyInvoice() {
+        this.requireAuth();
+
+        // Extract booking_entry_id from request body
+        const { booking_entry_id } = this.body;
+
+        if (!booking_entry_id) {
+            throw new Error("booking_entry_id is required");
+        }
+
+        // Call service with only booking_entry_id
+        const result = await getOtherTaxableChargesUsingId({ booking_entry_id });
+
+        this.send({
+            for: "getOtherTaxableChargesUsingId",
+            data: result,
+        });
+    }
+
+    async getNonTaxableOtherChargesForMonthlyInvoice() {
+        this.requireAuth();
+
+        // Extract booking_entry_id from request body
+        const { booking_entry_id } = this.body;
+
+        if (!booking_entry_id) {
+            throw new Error("booking_entry_id is required");
+        }
+
+        // Call service with only booking_entry_id
+        const result = await getOtherNonTaxableChargesUsingId({ booking_entry_id });
+
+        this.send({
+            for: "getOtherNonTaxableChargesUsingId",
+            data: result,
+        });
+    }
 
 }
 
