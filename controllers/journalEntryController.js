@@ -2,8 +2,8 @@ const PDO = require("../core/pod.js");
 exports.createJournal = async (params) => {
   const {
     company_id,
+    seletedCompany,
     branchId,
-    parent_companyId,
     vouchNo,
     vouchDate,
     narr,
@@ -23,7 +23,6 @@ exports.createJournal = async (params) => {
   try {
     const pdo = new PDO();
 
-    // 1️⃣ Insert JournalHead
     const headResult = await pdo.execute({
       sqlQuery: `
         INSERT INTO JournalHead
@@ -32,14 +31,14 @@ exports.createJournal = async (params) => {
            CreatedBy, CreatedAt, UpdatedBy, UpdatedAt)
         OUTPUT INSERTED.ID
         VALUES
-          (@company_id, @branchId, @parent_companyId, @vouchNo, @vouchDate, @narr,
+          (@seletedCompany, @branchId, @company_id, @vouchNo, @vouchDate, @narr,
            @totalDebitAmt, @totalCreditAmt, @amtAdjusted, @cancelYN, @cancelBy, @cancelOn, @cancelReason,
            @user_id, @createdAt, @user_id, @updatedAt)
       `,
       params: {
+        seletedCompany,
         company_id,
         branchId,
-        parent_companyId,
         vouchNo,
         vouchDate,
         narr,
@@ -59,7 +58,6 @@ exports.createJournal = async (params) => {
     const headerId = headResult[0]?.ID;
     if (!headerId) throw new Error("JournalHead insert failed");
 
-    // 2️⃣ Insert JournalTran (children)
     for (const tran of transactions) {
       await pdo.execute({
         sqlQuery: `
@@ -83,13 +81,11 @@ exports.createJournal = async (params) => {
       });
     }
 
-    // 3️⃣ Fetch full inserted JournalHead
     const headData = await pdo.execute({
       sqlQuery: `SELECT * FROM JournalHead WHERE ID = @headerId`,
       params: { headerId },
     });
 
-    // 4️⃣ Fetch all JournalTran linked to it
     const tranData = await pdo.execute({
       sqlQuery: `SELECT * FROM JournalTran WHERE HeaderID = @headerId`,
       params: { headerId },
