@@ -1,4 +1,4 @@
-const { createJournal } = require("../controllers/journalEntryController");
+const { createJournal, getJournalsByCompany } = require("../controllers/journalEntryController");
 const WebSocketHandler = require("../core/WebSocketHandler");
 const jwt = require("../core/jwt");
 
@@ -7,6 +7,28 @@ class EntryHandler extends WebSocketHandler {
     constructor() {
         super();
         this.publicCommands = [];
+    }
+
+    async getAllJournal() {
+        this.requireAuth();
+        const params = {
+            ...this.body,
+            company_id: this._user.company_id,
+            user_id: this._user.Id,
+        };
+        const result = await getJournalsByCompany(params);
+        if (result.StatusID === 1) {
+            this.send({
+                for: "getJournalsByCompany",
+                ...result,
+            });
+        } else {
+            this.send({
+                msg: "No data found",
+                type: "warning",
+                ...result,
+            });
+        }
     }
 
     async createJournalEntry() {
