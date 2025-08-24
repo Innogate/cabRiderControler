@@ -135,7 +135,6 @@ exports.createJournal = async (params) => {
     company_id,
     seletedCompany,
     branchId,
-    vouchNo,
     vouchDate,
     narr,
     totalDebitAmt,
@@ -154,23 +153,43 @@ exports.createJournal = async (params) => {
   try {
     const pdo = new PDO();
 
+    // Insert JournalHead and auto-generate VouchNo in one query
     const headResult = await pdo.execute({
       sqlQuery: `
+        DECLARE @shortName NVARCHAR(50);
+        DECLARE @nextId INT;
+
+        -- get company shortname
+        SELECT @shortName = ShortName 
+        FROM tbl_company 
+        WHERE ID = @seletedCompany;
+
+        -- find next number for this company + year
+        SELECT @nextId = ISNULL(
+          MAX(CAST(RIGHT(VouchNo, CHARINDEX('-', REVERSE(VouchNo)) - 1) AS INT)), 
+          0
+        ) + 1
+        FROM JournalHead 
+        WHERE Company_ID = @seletedCompany
+          AND YEAR(VouchDate) = YEAR(@vouchDate);
+
+        -- insert with auto-generated voucher number (ShortName-YYYY-000X)
         INSERT INTO JournalHead
           (Company_ID, BranchID, Parent_CompanyID, VouchNo, VouchDate, Narr,
            TotalDebitAmt, TotalCreditAmt, AmtAdjusted, CancelYN, CancelBy, CancelOn, CancelReason,
            CreatedBy, CreatedAt, UpdatedBy, UpdatedAt)
-        OUTPUT INSERTED.ID
+        OUTPUT INSERTED.ID, INSERTED.VouchNo
         VALUES
-          (@seletedCompany, @branchId, @company_id, @vouchNo, @vouchDate, @narr,
+          (@seletedCompany, @branchId, @company_id, 
+           CONCAT(@shortName, '-', YEAR(@vouchDate), '-', RIGHT('0000' + CAST(@nextId AS VARCHAR(10)), 4)),
+           @vouchDate, @narr,
            @totalDebitAmt, @totalCreditAmt, @amtAdjusted, @cancelYN, @cancelBy, @cancelOn, @cancelReason,
-           @user_id, @createdAt, @user_id, @updatedAt)
+           @user_id, @createdAt, @user_id, @updatedAt);
       `,
       params: {
         seletedCompany,
         company_id,
         branchId,
-        vouchNo,
         vouchDate,
         narr,
         totalDebitAmt,
@@ -189,6 +208,7 @@ exports.createJournal = async (params) => {
     const headerId = headResult[0]?.ID;
     if (!headerId) throw new Error("JournalHead insert failed");
 
+    // Insert Journal Transactions
     for (const tran of transactions) {
       await pdo.execute({
         sqlQuery: `
@@ -212,6 +232,7 @@ exports.createJournal = async (params) => {
       });
     }
 
+    // 3️⃣ Return inserted data
     const headData = await pdo.execute({
       sqlQuery: `SELECT * FROM JournalHead WHERE ID = @headerId`,
       params: { headerId },
@@ -238,3 +259,4 @@ exports.createJournal = async (params) => {
     };
   }
 };
+
