@@ -47,6 +47,8 @@ const {
   createGl,
   updateGl,
 } = require("../controllers/glMasterController");
+const { getAllBranch, createUpdateBranch } = require("../controllers/branchMasterController");
+const { getAllCompany, createUpdateCompany } = require("../controllers/companyMasterController");
 
 class MasterHandler extends WebSocketHandler {
   constructor() {
@@ -756,6 +758,105 @@ class MasterHandler extends WebSocketHandler {
         msg: "An unexpected error occurred. Please try again.",
         type: "error",
         error: error.message || error,
+      });
+    }
+  }
+
+    async getAllBranchMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await getAllBranch(params);
+    if (result) {
+      this.send({
+        for: "getAllBranch",
+        ...result,
+      });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+
+   async createUpdateBranchMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await createUpdateBranch(params);
+    if (result.StatusID === 1) {
+      this.send({ msg: result.StatusMessage, type: "success" });
+      this.broadcastTo(
+        {
+          for: "createUpdateBranch",
+          StatusID: result.StatusID,
+          data: result.data,
+        },
+        { company_id: this._user.company_id }
+      );
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+    async getAllCompanyMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await getAllCompany(params);
+    if (result) {
+      this.send({
+        for: "getAllCompany",
+        ...result,
+      });
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+   async createUpdateCompanyMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await createUpdateCompany(params);
+    if (result.StatusID === 1) {
+      this.send({ msg: result.StatusMessage, type: "success" });
+      this.broadcastTo(
+        {
+          for: "createUpdateCompany",
+          StatusID: result.StatusID,
+          data: result.data,
+        },
+        { company_id: this._user.company_id }
+      );
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
       });
     }
   }
