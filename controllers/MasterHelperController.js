@@ -347,3 +347,46 @@ ORDER BY charges_mast.charge_name;
     nonTaxable,
   };
 };
+
+
+
+// exports.getMonthlyInvoice = async (params) => {
+//   const {
+//     InvoiceID,
+//     CompanyID,
+//   } = params;
+
+//   const pdo = new PDO();
+
+//   const { data, output } = await pdo.callProcedure({
+//     procName: "spMonthlyInvoice_Prn",
+//     inputParams: [
+//       { name: "InvoiceID", type: sql.BigInt, value: InvoiceID },
+//       { name: "CompanyID", type: sql.BigInt, value: CompanyID },
+//     ],
+//     outputParams: [
+//       { name: "StatusID", type: sql.Int },
+//       { name: "StatusMessage", type: sql.VarChar(200) },
+//     ],
+//   });
+
+//   return {
+//     data,  // SP resultset (invoice details)
+//     status: output.StatusID,
+//     message: output.StatusMessage,
+//   };
+// };
+
+exports.getMonthlyInvoice = async (InvoiceID, CompanyID) => {
+    const pdo = new PDO();
+
+    // Ensure numbers
+    const invoiceNumber = Number(InvoiceID);
+    const companyNumber = Number(CompanyID);
+
+    const result = await pdo.execute({
+        sqlQuery: `exec spMonthlyInvoice_prn ${invoiceNumber}, ${companyNumber}`
+    });
+
+    return result;
+};
