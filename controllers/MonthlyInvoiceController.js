@@ -26,8 +26,13 @@ exports.getMBookingList = async (params) => {
   const result = await pdo.execute({
     sqlQuery: `
     SELECT bd.*,
-    bs.GustName as GustName
-FROM dbo.booking_details bd JOIN dbo.Bookingsummery as bs ON bd.id = bs.bookingID
+       bs.GustName as GustName,
+       ctm.car_type as car_type_name,
+       dtm.name as duty_type_name
+FROM dbo.booking_details bd
+JOIN dbo.Bookingsummery as bs ON bd.id = bs.bookingID
+JOIN dbo.car_type_mast as ctm ON bd.CarType = ctm.id
+JOIN dbo.duty_type_mast dtm ON bd.DutyType = dtm.id
 WHERE bd.DutyType = 5
   AND bd.Party = @party_id 
   AND bd.branch_id = @branch_id
