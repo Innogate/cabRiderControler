@@ -27,7 +27,8 @@ exports.getMBookingList = async (params) => {
     sqlQuery: `
     SELECT * 
 FROM dbo.booking_details bd 
-WHERE bd.Party = @party_id 
+WHERE bd.DutyType = 5
+  AND bd.Party = @party_id 
   AND bd.branch_id = @branch_id
   AND bd.FromCityID = @from_city_id 
   AND bd.company_id = @company_id 

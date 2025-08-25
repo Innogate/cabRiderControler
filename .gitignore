@@ -4,3 +4,4 @@ db/
 package-lock.json
 commands/
 dotfiles
+.env.backup
