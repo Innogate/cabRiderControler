@@ -1,8 +1,8 @@
 const WebSocketHandler = require("../core/WebSocketHandler.js");
-const { getPartyListDropdown, getBranchDropdownList, 
-        getCompanyDropdownList, getPartyMasterById, getOtherCharges, 
-        getOtherChargesUsingId, getOtherTaxableChargesUsingId, getOtherNonTaxableChargesUsingId
- } = require("../controllers/MasterHelperController.js");
+const { getPartyListDropdown, getBranchDropdownList,
+    getCompanyDropdownList, getPartyMasterById, getOtherCharges,
+    getOtherChargesUsingId, getOtherTaxableChargesUsingId, getOtherNonTaxableChargesUsingId,
+    getMonthlyInvoice } = require("../controllers/MasterHelperController.js");
 
 class HelperHandler extends WebSocketHandler {
     constructor() {
@@ -134,6 +134,70 @@ class HelperHandler extends WebSocketHandler {
             data: result,
         });
     }
+
+    // async getPartyinfoForPdf() {
+    //     this.requireAuth();
+
+    //         const params = {
+    //     InvoiceID: this.body.invoice_id,  // convert to number
+    //     CompanyID: this._user.company_id
+    // };
+
+    //     console.log("Input is : ", params);
+
+    //     const result = await getMonthlyInvoice(params);
+
+    //     if (result.status != 1) {
+    //         this.send({
+    //             msg: "Something went wrong, please try again later",
+    //             type: "warn",
+    //             ...result,
+    //         });
+    //         return;
+    //     }
+
+    //     this.send({
+    //         for: "getPartyInfoForPdf",
+    //         ...result,
+    //     });
+
+    //     console.log("Output is : ", result);
+    // }
+
+    async getPartyinfoForPdf() {
+    this.requireAuth();
+
+    // Extract invoice_id from the request body
+    const invoiceId = this.body.invoice_id;
+
+    // Validate and convert to number
+    if (!invoiceId) {
+        this.send({
+            msg: "Invoice ID is required",
+            type: "warn"
+        });
+        return;
+    }
+
+    const InvoiceID = Number(invoiceId);
+    const CompanyID = Number(this._user.company_id);
+
+    // Call the SP with parameters
+    let result = await getMonthlyInvoice(InvoiceID, CompanyID);
+
+    // If no data, return empty array
+    if (!result || result.length === 0) {
+        result = [];
+    }
+
+    this.send({
+        for: "partyinfo",
+        data: result
+    });
+}
+
+
+
 
 }
 
