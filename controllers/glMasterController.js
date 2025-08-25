@@ -171,7 +171,7 @@ exports.updateGl = async (params) => {
 };
 
 exports.deleteGl = async (params) => {
-  const { id, company_id } = params;
+  const { id, company_id, user_id } = params;
   try {
     const pdo = new PDO();
     const now = new Date();
@@ -181,11 +181,13 @@ exports.deleteGl = async (params) => {
       sqlQuery: `
         UPDATE GLMast
         SET 
-         active_status = 0
+         active_status = 0,
+         UpdatedBy = @user_id,
+         UpdatedAt = @now
         OUTPUT INSERTED.*
         WHERE id = @id
       `,
-      params: { id },
+      params: { id,user_id, now },
     });
 
     if (!result.length) {

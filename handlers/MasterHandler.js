@@ -49,7 +49,7 @@ const {
   deleteGl,
 } = require("../controllers/glMasterController");
 const { getAllBranch, createUpdateBranch } = require("../controllers/branchMasterController");
-const { getAllCompany, createUpdateCompany } = require("../controllers/companyMasterController");
+const { getAllCompany, createUpdateCompany, deleteCompany } = require("../controllers/companyMasterController");
 
 class MasterHandler extends WebSocketHandler {
   constructor() {
@@ -763,6 +763,36 @@ class MasterHandler extends WebSocketHandler {
     }
   }
 
+
+
+  async deleteGlMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await deleteGl(params);
+    if (result.StatusID === 1) {
+      this.send({ msg: result.StatusMessage, type: "success" });
+      this.broadcastTo(
+        {
+          for: "deleteGl",
+          StatusID: result.StatusID,
+          data: result.data,
+        },
+        { company_id: this._user.company_id }
+      );
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+  
+
     async getAllBranchMaster() {
     this.requireAuth();
     const params = {
@@ -862,19 +892,20 @@ class MasterHandler extends WebSocketHandler {
     }
   }
 
-  async deleteGlMaster() {
+
+  async deleteCompanyMaster() {
     this.requireAuth();
     const params = {
       ...this.body,
       company_id: this._user.company_id,
       user_id: this._user.Id,
     };
-    const result = await deleteGl(params);
+    const result = await deleteCompany(params);
     if (result.StatusID === 1) {
       this.send({ msg: result.StatusMessage, type: "success" });
       this.broadcastTo(
         {
-          for: "deleteGl",
+          for: "deleteCompany",
           StatusID: result.StatusID,
           data: result.data,
         },
@@ -888,8 +919,6 @@ class MasterHandler extends WebSocketHandler {
       });
     }
   }
-
-
 
 }
 

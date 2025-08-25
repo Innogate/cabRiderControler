@@ -123,3 +123,57 @@ exports.createUpdateCompany = async (params) => {
     TotalCount: output.TotalCount
   };
 };
+
+exports.deleteCompany = async (params) => {
+  const { id, company_id } = params;
+  try {
+    const pdo = new PDO();
+    const now = new Date();
+
+    // Soft delete the company row
+    const result = await pdo.execute({
+      sqlQuery: `
+        UPDATE tbl_company
+        SET delete_at = @now
+        OUTPUT INSERTED.*
+        WHERE id = @id
+      `,
+      params: { id, now },
+    });
+
+    if (!result.length) {
+      return {
+        data: [],
+        StatusID: 0,
+        StatusMessage: "Company not found or already deleted",
+        TotalCount: 0,
+      };
+    }
+
+    // Count GL records for the company (excluding deleted if needed)
+    const totalCountResult = await pdo.execute({
+      sqlQuery: `
+        SELECT COUNT(*) as TotalCount 
+        FROM GLMast 
+        WHERE company_id = @company_id
+      `,
+      params: { company_id },
+    });
+
+    const totalCount = totalCountResult[0]?.TotalCount || 0;
+
+    return {
+      data: result[0], // returning updated company row
+      StatusID: 1,
+      StatusMessage: "Company deleted successfully",
+      TotalCount: totalCount,
+    };
+  } catch (error) {
+    return {
+      data: [],
+      StatusID: 0,
+      StatusMessage: error.message,
+      TotalCount: 0,
+    };
+  }
+};
