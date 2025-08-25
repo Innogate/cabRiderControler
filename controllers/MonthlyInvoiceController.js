@@ -25,8 +25,9 @@ exports.getMBookingList = async (params) => {
   const pdo = new PDO();
   const result = await pdo.execute({
     sqlQuery: `
-    SELECT * 
-FROM dbo.booking_details bd 
+    SELECT bd.*,
+    bs.GustName as GustName
+FROM dbo.booking_details bd JOIN dbo.Bookingsummery as bs ON bd.id = bs.bookingID
 WHERE bd.DutyType = 5
   AND bd.Party = @party_id 
   AND bd.branch_id = @branch_id
