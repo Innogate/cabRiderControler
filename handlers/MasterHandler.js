@@ -46,6 +46,7 @@ const {
   getAllGlTypes,
   createGl,
   updateGl,
+  deleteGl,
 } = require("../controllers/glMasterController");
 const { getAllBranch, createUpdateBranch } = require("../controllers/branchMasterController");
 const { getAllCompany, createUpdateCompany } = require("../controllers/companyMasterController");
@@ -860,6 +861,36 @@ class MasterHandler extends WebSocketHandler {
       });
     }
   }
+
+  async deleteGlMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await deleteGl(params);
+    if (result.StatusID === 1) {
+      this.send({ msg: result.StatusMessage, type: "success" });
+      this.broadcastTo(
+        {
+          for: "deleteGl",
+          StatusID: result.StatusID,
+          data: result.data,
+        },
+        { company_id: this._user.company_id }
+      );
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+
+
 }
 
 module.exports = new MasterHandler();
