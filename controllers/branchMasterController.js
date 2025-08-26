@@ -3,7 +3,7 @@ const PDO = require("../core/pod.js");
 
 exports.getAllBranch = async (params) => {
   const {
-    id = 0,
+    id,
     PageNo = 1,
     PageSize = 10,
     Search = '',
@@ -114,4 +114,61 @@ exports.createUpdateBranch = async (params) => {
     StatusMessage: output.StatusMessage,
     TotalCount: output.TotalCount
   };
+};
+
+
+
+
+exports.deleteBranch = async (params) => {
+  const { id, company_id } = params;
+  try {
+    const pdo = new PDO();
+    const now = new Date();
+
+    // Soft delete the company row
+    const result = await pdo.execute({
+      sqlQuery: `
+        UPDATE tbl_branch
+        SET deleted_at = @now
+        OUTPUT INSERTED.*
+        WHERE id = @id
+      `,
+      params: { id, now },
+    });
+
+    if (!result.length) {
+      return {
+        data: [],
+        StatusID: 0,
+        StatusMessage: "Branch not found or already deleted",
+        TotalCount: 0,
+      };
+    }
+
+    // Count GL records for the company (excluding deleted if needed)
+    const totalCountResult = await pdo.execute({
+      sqlQuery: `
+        SELECT COUNT(*) as TotalCount 
+        FROM tbl_branch 
+        WHERE company_id = @company_id AND deleted_at IS NULL
+      `,
+      params: { company_id },
+    });
+
+    const totalCount = totalCountResult[0]?.TotalCount || 0;
+
+    return {
+      data: result[0], // returning updated company row
+      StatusID: 1,
+      StatusMessage: "Branch deleted successfully",
+      TotalCount: totalCount,
+    };
+  } catch (error) {
+    return {
+      data: [],
+      StatusID: 0,
+      StatusMessage: error.message,
+      TotalCount: 0,
+    };
+  }
 };

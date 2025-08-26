@@ -48,7 +48,7 @@ const {
   updateGl,
   deleteGl,
 } = require("../controllers/glMasterController");
-const { getAllBranch, createUpdateBranch } = require("../controllers/branchMasterController");
+const { getAllBranch, createUpdateBranch, deleteBranch } = require("../controllers/branchMasterController");
 const { getAllCompany, createUpdateCompany, deleteCompany } = require("../controllers/companyMasterController");
 
 class MasterHandler extends WebSocketHandler {
@@ -791,9 +791,9 @@ class MasterHandler extends WebSocketHandler {
       });
     }
   }
-  
 
-    async getAllBranchMaster() {
+
+  async getAllBranchMaster() {
     this.requireAuth();
     const params = {
       ...this.body,
@@ -816,7 +816,7 @@ class MasterHandler extends WebSocketHandler {
   }
 
 
-   async createUpdateBranchMaster() {
+  async createUpdateBranchMaster() {
     this.requireAuth();
     const params = {
       ...this.body,
@@ -843,7 +843,34 @@ class MasterHandler extends WebSocketHandler {
     }
   }
 
-    async getAllCompanyMaster() {
+  async deleteBranchMaster() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await deleteBranch(params);
+    if (result.StatusID === 1) {
+      this.send({ msg: result.StatusMessage, type: "success" });
+      this.broadcastTo(
+        {
+          for: "deleteBranch",
+          StatusID: result.StatusID,
+          data: result.data,
+        },
+        { company_id: this._user.company_id }
+      );
+    } else {
+      this.send({
+        msg: "No data found",
+        type: "warning",
+        ...result,
+      });
+    }
+  }
+
+  async getAllCompanyMaster() {
     this.requireAuth();
     const params = {
       ...this.body,
@@ -865,7 +892,7 @@ class MasterHandler extends WebSocketHandler {
     }
   }
 
-   async createUpdateCompanyMaster() {
+  async createUpdateCompanyMaster() {
     this.requireAuth();
     const params = {
       ...this.body,
