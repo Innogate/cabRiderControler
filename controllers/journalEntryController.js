@@ -1,5 +1,70 @@
 const PDO = require("../core/pod.js");
 
+
+
+// journal.service.js
+exports.getAllJournalHeaders = async (params) => {
+  const { company_id, pageSize = 10, page = 1 } = params;
+  try {
+    const pdo = new PDO();
+    const offset = (page - 1) * pageSize;
+
+    // Count total records
+    const totalResult = await pdo.execute({
+      sqlQuery: `
+        SELECT COUNT(*) AS total 
+        FROM JournalHead 
+        WHERE Parent_CompanyID = @company_id
+      `,
+      params: { company_id },
+    });
+
+    const totalRecords = totalResult[0]?.total || 0;
+    if (totalRecords === 0) {
+      return {
+        data: [],
+        totalRecords,
+        StatusID: 2,
+        StatusMessage: "No journals found",
+      };
+    }
+
+    // Fetch only VouchNo & VouchDate
+    const rows = await pdo.execute({
+      sqlQuery: `
+        SELECT 
+          ID,
+          VouchNo,
+          VouchDate,
+          TotalCreditAmt
+        FROM JournalHead
+        WHERE Parent_CompanyID = @company_id
+        ORDER BY CreatedAt DESC
+        OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
+      `,
+      params: { company_id, offset, pageSize },
+    });
+
+    return {
+      data: rows, // only ID, VouchNo, VouchDate
+      totalRecords,
+      currentPage: page,
+      pageSize,
+      totalPages: Math.ceil(totalRecords / pageSize),
+      StatusID: 1,
+      StatusMessage: "Journal headers fetched successfully",
+    };
+
+  } catch (error) {
+    return {
+      data: [],
+      StatusID: 0,
+      StatusMessage: error.message,
+    };
+  }
+};
+
+
 exports.getJournalsByCompany = async (params) => {
   const { company_id, pageSize, page } = params;
   try {
