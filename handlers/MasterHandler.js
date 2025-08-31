@@ -403,15 +403,13 @@ class MasterHandler extends WebSocketHandler {
       user_id: this._user.Id,
     };
     const result = await createUpdateParty(params);
-    if (result) {
-      // this.send({
-      //   for: "createUpdateParty",
-      //   ...result,
-      // });
+    if (result.StatusID === 1) {
+      this.send({ msg: result.StatusMessage, type: "success" });
       this.broadcastTo(
         {
           for: "createUpdateParty",
-          ...result,
+          StatusID: result.StatusID,
+          data: result.data,
         },
         { company_id: this._user.company_id }
       );
