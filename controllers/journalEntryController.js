@@ -65,134 +65,241 @@ exports.getAllJournalHeaders = async (params) => {
 };
 
 
-exports.getJournalsByCompany = async (params) => {
-  const { company_id, pageSize, page } = params;
+// exports.getJournalsByCompany = async (params) => {
+//   const { company_id, pageSize, page } = params;
+//   try {
+//     const pdo = new PDO();
+//     const offset = (page - 1) * pageSize;
+
+//     const totalResult = await pdo.execute({
+//       sqlQuery: `
+//         SELECT COUNT(*) AS total
+//         FROM JournalHead 
+//         WHERE Parent_CompanyID = @company_id
+//       `,
+//       params: { company_id },
+//     });
+
+//     const totalRecords = totalResult[0]?.total || 0;
+//     if (totalRecords === 0) {
+//       return {
+//         data: [],
+//         totalRecords,
+//         StatusID: 2,
+//         StatusMessage: "No journals found for this company",
+//       };
+//     }
+
+//     const rows = await pdo.execute({
+//       sqlQuery: `
+//        SELECT 
+//        h.id AS HeadID,
+//        h.Company_ID,
+//        h.BranchID,
+//        h.Parent_CompanyID,
+//        h.VouchNo,
+//        h.VouchDate,
+//        h.Narr,               
+//        h.TotalDebitAmt,
+//        h.TotalCreditAmt,
+//        h.AmtAdjusted,
+//        h.CancelYN,
+//        h.CancelBy,
+//        h.CancelOn,
+//        h.CancelReason,
+//        h.CreatedBy,
+//        h.CreatedAt,
+//        h.UpdatedBy,
+//        h.UpdatedAt,
+
+//   -- JournalTran columns
+//   t.id AS TranID,
+//   t.HeaderID,
+//   t.LedgerType,
+//   t.PartyID,
+//   t.DebitAmt,
+//   t.CreditAmt,
+//   t.CreatedOn AS TranCreatedOn,
+//   t.CreatedBy AS TranCreatedBy,
+//   t.UpdatedAt AS TranUpdatedAt,
+//   t.UpdatedBy AS TranUpdatedBy
+
+// FROM JournalHead h
+// LEFT JOIN JournalTran t ON h.ID = t.HeaderID
+// WHERE h.Parent_CompanyID = @company_id
+// ORDER BY h.CreatedAt DESC
+// OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY;
+
+//       `,
+//       params: { company_id, offset, pageSize },
+//     });
+
+//     const grouped = Object.values(
+//       rows.reduce((acc, row) => {
+//         if (!acc[row.HeadID]) {
+//           acc[row.HeadID] = {
+//             id: row.HeadID,
+//             Company_ID: row.Company_ID,
+//             BranchID: row.BranchID,
+//             Parent_CompanyID: row.Parent_CompanyID,
+//             VouchNo: row.VouchNo,
+//             VouchDate: row.VouchDate,
+//             Narr: row.Narr,
+//             TotalDebitAmt: row.TotalDebitAmt,
+//             TotalCreditAmt: row.TotalCreditAmt,
+//             AmtAdjusted: row.AmtAdjusted,
+//             CancelYN: row.CancelYN,
+//             CancelBy: row.CancelBy,
+//             CancelOn: row.CancelOn,
+//             CancelReason: row.CancelReason,
+//             CreatedBy: row.CreatedBy,
+//             CreatedAt: row.CreatedAt,
+//             UpdatedBy: row.UpdatedBy,
+//             UpdatedAt: row.UpdatedAt,
+//             transactions: [],
+//           };
+//         }
+//         if (row.TranID) {
+//           acc[row.HeadID].transactions.push({
+//             ID: row.TranID,
+//             HeaderID: row.HeaderID,
+//             AccountID: row.AccountID,
+//             DebitAmt: row.DebitAmt,
+//             CreditAmt: row.CreditAmt,
+//             Narr: row.TranNarr,
+//           });
+//         }
+//         return acc;
+//       }, {})
+//     );
+
+//     return {
+//       data: grouped,
+//       totalRecords,
+//       currentPage: page,
+//       pageSize,
+//       totalPages: Math.ceil(totalRecords / pageSize),
+//       StatusID: 1,
+//       StatusMessage: "Journals fetched successfully",
+//     };
+
+//   } catch (error) {
+//     return {
+//       data: [],
+//       StatusID: 0,
+//       StatusMessage: error.message,
+//     };
+//   }
+// };
+
+
+exports.getJournalById = async (params) => {
+  const { journal_id } = params;
   try {
     const pdo = new PDO();
-    const offset = (page - 1) * pageSize;
-
-    const totalResult = await pdo.execute({
-      sqlQuery: `
-        SELECT COUNT(*) AS total
-        FROM JournalHead 
-        WHERE Parent_CompanyID = @company_id
-      `,
-      params: { company_id },
-    });
-
-    const totalRecords = totalResult[0]?.total || 0;
-    if (totalRecords === 0) {
-      return {
-        data: [],
-        totalRecords,
-        StatusID: 2,
-        StatusMessage: "No journals found for this company",
-      };
-    }
 
     const rows = await pdo.execute({
       sqlQuery: `
-       SELECT 
-       h.id AS HeadID,
-       h.Company_ID,
-       h.BranchID,
-       h.Parent_CompanyID,
-       h.VouchNo,
-       h.VouchDate,
-       h.Narr,               
-       h.TotalDebitAmt,
-       h.TotalCreditAmt,
-       h.AmtAdjusted,
-       h.CancelYN,
-       h.CancelBy,
-       h.CancelOn,
-       h.CancelReason,
-       h.CreatedBy,
-       h.CreatedAt,
-       h.UpdatedBy,
-       h.UpdatedAt,
+        SELECT 
+          h.id AS HeadID,
+          h.Company_ID,
+          h.BranchID,
+          h.Parent_CompanyID,
+          h.VouchNo,
+          h.VouchDate,
+          h.Narr,               
+          h.TotalDebitAmt,
+          h.TotalCreditAmt,
+          h.AmtAdjusted,
+          h.CancelYN,
+          h.CancelBy,
+          h.CancelOn,
+          h.CancelReason,
+          h.CreatedBy,
+          h.CreatedAt,
+          h.UpdatedBy,
+          h.UpdatedAt,
 
-  -- JournalTran columns
-  t.id AS TranID,
-  t.HeaderID,
-  t.LedgerType,
-  t.PartyID,
-  t.DebitAmt,
-  t.CreditAmt,
-  t.CreatedOn AS TranCreatedOn,
-  t.CreatedBy AS TranCreatedBy,
-  t.UpdatedAt AS TranUpdatedAt,
-  t.UpdatedBy AS TranUpdatedBy
-
-FROM JournalHead h
-LEFT JOIN JournalTran t ON h.ID = t.HeaderID
-WHERE h.Parent_CompanyID = @company_id
-ORDER BY h.CreatedAt DESC
-OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY;
-
+          -- JournalTran columns
+          t.id AS TranID,
+          t.HeaderID,
+          t.LedgerType,
+          t.PartyID,
+          t.DebitAmt,
+          t.CreditAmt,
+          t.CreatedOn AS TranCreatedOn,
+          t.CreatedBy AS TranCreatedBy,
+          t.UpdatedAt AS TranUpdatedAt,
+          t.UpdatedBy AS TranUpdatedBy
+        FROM JournalHead h
+        LEFT JOIN JournalTran t ON h.ID = t.HeaderID
+        WHERE h.ID = @journal_id
       `,
-      params: { company_id, offset, pageSize },
+      params: { journal_id },
     });
 
-    const grouped = Object.values(
-      rows.reduce((acc, row) => {
-        if (!acc[row.HeadID]) {
-          acc[row.HeadID] = {
-            id: row.HeadID,
-            Company_ID: row.Company_ID,
-            BranchID: row.BranchID,
-            Parent_CompanyID: row.Parent_CompanyID,
-            VouchNo: row.VouchNo,
-            VouchDate: row.VouchDate,
-            Narr: row.Narr,
-            TotalDebitAmt: row.TotalDebitAmt,
-            TotalCreditAmt: row.TotalCreditAmt,
-            AmtAdjusted: row.AmtAdjusted,
-            CancelYN: row.CancelYN,
-            CancelBy: row.CancelBy,
-            CancelOn: row.CancelOn,
-            CancelReason: row.CancelReason,
-            CreatedBy: row.CreatedBy,
-            CreatedAt: row.CreatedAt,
-            UpdatedBy: row.UpdatedBy,
-            UpdatedAt: row.UpdatedAt,
-            transactions: [],
-          };
-        }
-        if (row.TranID) {
-          acc[row.HeadID].transactions.push({
-            ID: row.TranID,
-            HeaderID: row.HeaderID,
-            AccountID: row.AccountID,
-            DebitAmt: row.DebitAmt,
-            CreditAmt: row.CreditAmt,
-            Narr: row.TranNarr,
-          });
-        }
-        return acc;
-      }, {})
-    );
+    if (!rows || rows.length === 0) {
+      return {
+        data: null,
+        StatusID: 2,
+        StatusMessage: "Journal not found",
+      };
+    }
+
+    // Group transactions under one journal
+    const journal = {
+      id: rows[0].HeadID,
+      Company_ID: rows[0].Company_ID,
+      BranchID: rows[0].BranchID,
+      Parent_CompanyID: rows[0].Parent_CompanyID,
+      VouchNo: rows[0].VouchNo,
+      VouchDate: rows[0].VouchDate,
+      Narr: rows[0].Narr,
+      TotalDebitAmt: rows[0].TotalDebitAmt,
+      TotalCreditAmt: rows[0].TotalCreditAmt,
+      AmtAdjusted: rows[0].AmtAdjusted,
+      CancelYN: rows[0].CancelYN,
+      CancelBy: rows[0].CancelBy,
+      CancelOn: rows[0].CancelOn,
+      CancelReason: rows[0].CancelReason,
+      CreatedBy: rows[0].CreatedBy,
+      CreatedAt: rows[0].CreatedAt,
+      UpdatedBy: rows[0].UpdatedBy,
+      UpdatedAt: rows[0].UpdatedAt,
+      transactions: [],
+    };
+
+    rows.forEach((row) => {
+      if (row.TranID) {
+        journal.transactions.push({
+          ID: row.TranID,
+          HeaderID: row.HeaderID,
+          LedgerType: row.LedgerType,
+          PartyID: row.PartyID,
+          DebitAmt: row.DebitAmt,
+          CreditAmt: row.CreditAmt,
+          CreatedOn: row.TranCreatedOn,
+          CreatedBy: row.TranCreatedBy,
+          UpdatedAt: row.TranUpdatedAt,
+          UpdatedBy: row.TranUpdatedBy,
+        });
+      }
+    });
 
     return {
-      data: grouped,
-      totalRecords,
-      currentPage: page,
-      pageSize,
-      totalPages: Math.ceil(totalRecords / pageSize),
+      data: journal,
       StatusID: 1,
-      StatusMessage: "Journals fetched successfully",
+      StatusMessage: "Journal fetched successfully",
     };
 
   } catch (error) {
     return {
-      data: [],
+      data: null,
       StatusID: 0,
       StatusMessage: error.message,
     };
   }
 };
-
-
 
 
 exports.createJournal = async (params) => {
