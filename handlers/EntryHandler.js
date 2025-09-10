@@ -1,3 +1,4 @@
+const { createGeneRaleSaleBill } = require("../controllers/generalSaleBillController");
 const { createJournal, getJournalsByCompany } = require("../controllers/journalEntryController");
 const WebSocketHandler = require("../core/WebSocketHandler");
 const jwt = require("../core/jwt");
@@ -71,6 +72,43 @@ class EntryHandler extends WebSocketHandler {
     }
 
 
+    async createGeneralSaleBill() {
+        this.requireAuth();
+        const params = {
+            ...this.body,
+            Parent_CompanyID: this._user.company_id,
+            user_id: this._user.Id,
+        };
+        const result = await createGeneRaleSaleBill(params);
+
+        if (result.StatusID === 1) {
+            this.send({ msg: result.StatusMessage, type: "success" });
+            this.broadcastTo(
+                {
+                    for: "createGeneRaleSaleBill",
+                    StatusID: result.StatusID,
+                    data: result.data,
+                },
+                { company_id: this._user.company_id }
+            );
+        } else if (result.StatusID === 2) {
+            this.send({ msg: result.StatusMessage, type: "error" });
+            this.broadcastTo(
+                {
+                    for: "createGeneRaleSaleBill",
+                    StatusID: result.StatusID,
+                    data: result.data,
+                },
+                { company_id: this._user.company_id }
+            );
+        } else {
+            this.send({
+                msg: result.StatusMessage || "No data found",
+                type: "warning",
+                ...result,
+            });
+        }
+    }
 
 
 }
