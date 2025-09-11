@@ -1,4 +1,4 @@
-const { createGeneRaleSaleBill } = require("../controllers/generalSaleBillController");
+const { createGeneRaleSaleBill, getAllGeneralSaleBillHeaders } = require("../controllers/generalSaleBillController");
 const { createJournal, getJournalsByCompany } = require("../controllers/journalEntryController");
 const WebSocketHandler = require("../core/WebSocketHandler");
 const jwt = require("../core/jwt");
@@ -65,6 +65,28 @@ class EntryHandler extends WebSocketHandler {
         } else {
             this.send({
                 msg: result.StatusMessage || "No data found",
+                type: "warning",
+                ...result,
+            });
+        }
+    }
+
+    async getAllgeneralSaleBill() {
+        this.requireAuth();
+        const params = {
+            ...this.body,
+            Parent_CompanyID: this._user.company_id,
+            user_id: this._user.Id,
+        };
+        const result = await getAllGeneralSaleBillHeaders(params);
+        if (result.StatusID === 1) {
+            this.send({
+                for: "getAllGeneralSaleBill",
+                ...result,
+            });
+        } else {
+            this.send({
+                msg: "No data found",
                 type: "warning",
                 ...result,
             });

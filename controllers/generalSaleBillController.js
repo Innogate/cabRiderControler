@@ -1,5 +1,68 @@
 const PDO = require("../core/pod.js");
 
+
+exports.getAllGeneralSaleBillHeaders = async (params) => {
+  const { Parent_CompanyID, pageSize = 10, page = 1 } = params;
+  try {
+    const pdo = new PDO();
+    const offset = (page - 1) * pageSize;
+
+    const totalResult = await pdo.execute({
+      sqlQuery: `
+        SELECT COUNT(*) AS total 
+        FROM GenSaleBillHead 
+        WHERE Parent_CompanyID = @Parent_CompanyID
+      `,
+      params: { Parent_CompanyID },
+    });
+
+    const totalRecords = totalResult[0]?.total || 0;
+    if (totalRecords === 0) {
+      return {
+        data: [],
+        totalRecords,
+        StatusID: 2,
+        StatusMessage: "No bill found",
+      };
+    }
+    const rows = await pdo.execute({
+      sqlQuery: `
+        SELECT 
+          id,
+          InvNo,
+          InvDate,
+          DueDate,
+          InvType,
+          GrossAmt,
+          EntryDate
+        FROM GenSaleBillHead
+        WHERE Parent_CompanyID = @Parent_CompanyID
+        ORDER BY EntryDate DESC
+        OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
+      `,
+      params: { Parent_CompanyID, offset, pageSize },
+    });
+
+    return {
+      data: rows,
+      totalRecords,
+      currentPage: page,
+      pageSize,
+      totalPages: Math.ceil(totalRecords / pageSize),
+      StatusID: 1,
+      StatusMessage: "fetched successfully",
+    };
+
+  } catch (error) {
+    return {
+      data: [],
+      StatusID: 0,
+      StatusMessage: error.message,
+    };
+  }
+};
+
+
 exports.createGeneRaleSaleBill = async (params) => {
   const {
     company_id,
