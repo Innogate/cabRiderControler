@@ -32,7 +32,7 @@ exports.createGeneRaleSaleBill = async (params) => {
     NonTaxChargeAmt2,
     RndOffAmt,
     NetAmt,
-    UserID,
+    user_id,
     AmtAdjusted,
     transactions = []
   } = params;
@@ -41,7 +41,6 @@ exports.createGeneRaleSaleBill = async (params) => {
     const pdo = new PDO();
    const moment = require("moment");
 
-    // ✅ Insert head and return ID
     const headResult = await pdo.execute({
       sqlQuery: `
         INSERT INTO GenSaleBillHead (
@@ -57,7 +56,7 @@ exports.createGeneRaleSaleBill = async (params) => {
           @PartyID, @InvType, @TaxType, @RCM, @GrossAmt, @TaxChargesName1, @TaxChargeAmt1,
           @TaxChargesName2, @TaxChargeAmt2, @DiscPer, @DiscAmt, @CGSTPer, @CGSTAmt,
           @SGSTPer, @SGSTAmt, @IGSTPer, @IGSTAmt, @NonTaxChargeName1, @NonTaxChargeAmt1,
-          @NonTaxChargeName2, @NonTaxChargeAmt2, @RndOffAmt, @NetAmt, @UserID,
+          @NonTaxChargeName2, @NonTaxChargeAmt2, @RndOffAmt, @NetAmt, @user_id,
           @EntryDate, @AmtAdjusted
         )
       `,
@@ -92,7 +91,7 @@ exports.createGeneRaleSaleBill = async (params) => {
         NonTaxChargeAmt2,
         RndOffAmt,
         NetAmt,
-        UserID,
+        user_id,
         EntryDate: moment().format("YYYY-MM-DD HH:mm:ss"),
         AmtAdjusted,
       },
