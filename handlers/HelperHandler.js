@@ -108,7 +108,7 @@ class HelperHandler extends WebSocketHandler {
         }
 
         // Call service with only booking_entry_id
-        const result = await getOtherTaxableChargesUsingId({ booking_entry_id });
+        const result = await getOtherTaxableChargesUsingId({ booking_entry_id,  CompanyID: this._user.company_id  });
 
         this.send({
             for: "getOtherTaxableChargesUsingId",
@@ -121,13 +121,14 @@ class HelperHandler extends WebSocketHandler {
 
         // Extract booking_entry_id from request body
         const { booking_entry_id } = this.body;
+       
 
         if (!booking_entry_id) {
             throw new Error("booking_entry_id is required");
         }
 
         // Call service with only booking_entry_id
-        const result = await getOtherNonTaxableChargesUsingId({ booking_entry_id });
+        const result = await getOtherNonTaxableChargesUsingId({ booking_entry_id,  CompanyID: this._user.company_id });
 
         this.send({
             for: "getOtherNonTaxableChargesUsingId",
