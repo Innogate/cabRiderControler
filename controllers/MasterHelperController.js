@@ -37,7 +37,7 @@ exports.getCompanyDropdownList = async (
 }
 
 exports.getOtherCharges = async (params) => {
-  const { booking_ids } = params;
+  const { booking_ids, company_id } = params;
   const pdo = new PDO();
 
   if (!Array.isArray(booking_ids) || booking_ids.length === 0) {
@@ -50,10 +50,10 @@ exports.getOtherCharges = async (params) => {
   booking_ids.forEach((id, index) => {
     sqlParams[`id${index}`] = id;
   });
-
+   console.log(booking_ids);
   // 🔹 Query for taxable
   const sqlTaxable = `
-    SELECT 
+ SELECT 
     charges_mast.charge_name,
     charges_mast.taxable,
     charges_mast.company_id,
@@ -62,19 +62,22 @@ exports.getOtherCharges = async (params) => {
 FROM charges_mast
 JOIN tbl_booking_charge_summery 
     ON charges_mast.id = tbl_booking_charge_summery.ChargeId
-WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
-  AND charges_mast.taxable = 'Y'
+WHERE tbl_booking_charge_summery.BookingId IN (${inClause}) AND tbl_booking_charge_summery.charge_type = 'party'
+  AND charges_mast.taxable = 'Y' 
+  AND charges_mast.company_id = ${company_id}
 GROUP BY 
     charges_mast.charge_name,
     charges_mast.taxable,
     charges_mast.company_id,
     charges_mast.TallyName
-ORDER BY charges_mast.charge_name;
+ORDER BY 
+    charges_mast.charge_name;
   `;
 
   // 🔹 Query for non-taxable
   const sqlNonTaxable = `
-    SELECT 
+  SELECT 
+    tbl_booking_charge_summery.BookingId,
     charges_mast.charge_name,
     charges_mast.taxable,
     charges_mast.company_id,
@@ -84,13 +87,15 @@ FROM charges_mast
 JOIN tbl_booking_charge_summery 
     ON charges_mast.id = tbl_booking_charge_summery.ChargeId
 WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
-  AND charges_mast.taxable = 'N'
+  AND charges_mast.taxable = 'N' AND charges_mast.company_id = ${company_id}
 GROUP BY 
+    tbl_booking_charge_summery.BookingId,
     charges_mast.charge_name,
     charges_mast.taxable,
     charges_mast.company_id,
     charges_mast.TallyName
-ORDER BY charges_mast.charge_name;
+ORDER BY 
+    charges_mast.charge_name;
   `;
 
   // 🔹 Execute both
@@ -208,7 +213,7 @@ exports.getOtherChargesUsingId = async (params) => {
   };
 };
 
-// exports.getOtherTaxableChargesUsingId = async (params) => {
+// exports.getOtherTaxableChargesList = async (params) => {
 //   const { booking_entry_id } = params;
 //   const pdo = new PDO();
 
@@ -247,19 +252,27 @@ exports.getOtherChargesUsingId = async (params) => {
 
 //   // 🔹 Step 3: Queries for taxable & non-taxable
 //   const sqlTaxable = `
-//     SELECT 
+//    SELECT 
 //     charges_mast.charge_name,
 //     charges_mast.taxable,
 //     charges_mast.company_id,
 //     charges_mast.TallyName,
-//     tbl_booking_charge_summery.Amount AS total_amount,
-//     tbl_booking_charge_summery.BookingId ,
+//     charge_sum.total_amount,
+//     charge_sum.BookingId,
 //     booking_details.*
 // FROM charges_mast
-// JOIN tbl_booking_charge_summery 
-//     ON charges_mast.id = tbl_booking_charge_summery.ChargeId
-//     JOIN booking_details ON booking_details.id = tbl_booking_charge_summery.BookingId
-// WHERE tbl_booking_charge_summery.BookingId IN (${inClause})
+// JOIN (
+//     SELECT 
+//         tbl_booking_charge_summery.BookingId,
+//         tbl_booking_charge_summery.ChargeId,
+//         SUM(tbl_booking_charge_summery.Amount) AS total_amount
+//     FROM tbl_booking_charge_summery
+//     GROUP BY tbl_booking_charge_summery.BookingId, tbl_booking_charge_summery.ChargeId
+// ) AS charge_sum 
+//     ON charges_mast.id = charge_sum.ChargeId
+// JOIN booking_details 
+//     ON booking_details.id = charge_sum.BookingId
+// WHERE charge_sum.BookingId IN (${inClause})
 //   AND charges_mast.taxable = 'Y'
 // ORDER BY charges_mast.charge_name;
 
@@ -423,4 +436,28 @@ exports.getOtherNonTaxableChargesUsingId = async (params) => {
   return result;
 }
 
+
+exports.getOtherTaxableChargesList = async (params) => {
+  const { booking_entry_id, CompanyID, taxType } = params;
+  const pdo = new PDO();
+  const invoiceId = Number(booking_entry_id);
+  const company_id = Number(CompanyID);
+  const result = await pdo.execute({
+    sqlQuery: `exec sp_getOtherTaxableChargesList ${invoiceId},${company_id},${taxType}`
+  });
+
+  return result;
+
+}
+
+
+exports.getMonthlyInvoiceDutyList = async (params) => {
+  const { InvoiceID, CompanyID } = params;
+  const pdo = new PDO();
+
+  const result = await pdo.execute({
+    sqlQuery: `exec spGet_MonthlyInvDutyList ${1}},${CompanyID}`
+  });
+  return result;
+}
 

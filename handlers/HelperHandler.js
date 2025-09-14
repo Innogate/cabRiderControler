@@ -2,7 +2,9 @@ const WebSocketHandler = require("../core/WebSocketHandler.js");
 const { getPartyListDropdown, getBranchDropdownList,
     getCompanyDropdownList, getPartyMasterById, getOtherCharges,
     getOtherChargesUsingId, getOtherTaxableChargesUsingId, getOtherNonTaxableChargesUsingId,
-    getMonthlyInvoice } = require("../controllers/MasterHelperController.js");
+    getMonthlyInvoice,
+    getOtherTaxableChargesList, 
+    getMonthlyInvoiceDutyList} = require("../controllers/MasterHelperController.js");
 
 class HelperHandler extends WebSocketHandler {
     constructor() {
@@ -69,6 +71,7 @@ class HelperHandler extends WebSocketHandler {
         this.requireAuth();
         const params = {
             ...this.body,
+            company_id: this._user.company_id
         };
         const result = await getOtherCharges(params);
         this.send({
@@ -108,7 +111,7 @@ class HelperHandler extends WebSocketHandler {
         }
 
         // Call service with only booking_entry_id
-        const result = await getOtherTaxableChargesUsingId({ booking_entry_id,  CompanyID: this._user.company_id  });
+        const result = await getOtherTaxableChargesUsingId({ booking_entry_id, CompanyID: this._user.company_id });
 
         this.send({
             for: "getOtherTaxableChargesUsingId",
@@ -121,17 +124,37 @@ class HelperHandler extends WebSocketHandler {
 
         // Extract booking_entry_id from request body
         const { booking_entry_id } = this.body;
-       
+
 
         if (!booking_entry_id) {
             throw new Error("booking_entry_id is required");
         }
 
         // Call service with only booking_entry_id
-        const result = await getOtherNonTaxableChargesUsingId({ booking_entry_id,  CompanyID: this._user.company_id });
+        const result = await getOtherNonTaxableChargesUsingId({ booking_entry_id, CompanyID: this._user.company_id });
 
         this.send({
             for: "getOtherNonTaxableChargesUsingId",
+            data: result,
+        });
+    }
+
+
+
+    async getTaxableChargesList() {
+        this.requireAuth();
+        // Extract booking_entry_id from request body
+        const { booking_entry_id, taxType } = this.body;
+
+        if (!booking_entry_id) {
+            throw new Error("booking_entry_id is required");
+        }
+
+        // Call service with only booking_entry_id
+        const result = await getOtherTaxableChargesList({ booking_entry_id, CompanyID: this._user.company_id, taxType: taxType });
+
+        this.send({
+            for: "taxableChargesList",
             data: result,
         });
     }
@@ -166,38 +189,71 @@ class HelperHandler extends WebSocketHandler {
     // }
 
     async getPartyinfoForPdf() {
-    this.requireAuth();
+        this.requireAuth();
 
-    // Extract invoice_id from the request body
-    const invoiceId = this.body.invoice_id;
+        // Extract invoice_id from the request body
+        const invoiceId = this.body.invoice_id;
 
-    // Validate and convert to number
-    if (!invoiceId) {
+        // Validate and convert to number
+        if (!invoiceId) {
+            this.send({
+                msg: "Invoice ID is required",
+                type: "warn"
+            });
+            return;
+        }
+
+        const InvoiceID = Number(invoiceId);
+        const CompanyID = Number(this._user.company_id);
+
+        // Call the SP with parameters
+        let result = await getMonthlyInvoice(InvoiceID, CompanyID);
+
+        // If no data, return empty array
+        if (!result || result.length === 0) {
+            result = [];
+        }
+
         this.send({
-            msg: "Invoice ID is required",
-            type: "warn"
+            for: "partyinfo",
+            data: result
         });
-        return;
     }
 
-    const InvoiceID = Number(invoiceId);
-    const CompanyID = Number(this._user.company_id);
+    async getMonthlyInvoiceDutyList() {
+        this.requireAuth();
+        // Extract invoice_id from the request body
+        const invoiceId = this.body.invoice_id;
+        console.log("invoiceId", invoiceId)
 
-    // Call the SP with parameters
-    let result = await getMonthlyInvoice(InvoiceID, CompanyID);
+        // Validate and convert to number
+        if (!invoiceId) {
+            this.send({
+                msg: "Invoice ID is required",
+                type: "warn"
+            });
+            return;
+        }
 
-    // If no data, return empty array
-    if (!result || result.length === 0) {
-        result = [];
+        const InvoiceID = Number(invoiceId);
+        const CompanyID = Number(this._user.company_id);
+
+        console.log("InvoiceID", InvoiceID)
+        console.log("CompanyID", CompanyID)
+
+        // Call the SP with parameters
+        let result = await getMonthlyInvoiceDutyList({InvoiceID, CompanyID});
+
+        // If no data, return empty array
+        if (!result || result.length === 0) {
+            result = [];
+        }
+
+        this.send({
+            for: "getMonthlyInvoiceDutyList",
+            data: result
+        });
     }
-
-    this.send({
-        for: "partyinfo",
-        data: result
-    });
-}
-
-
 
 
 }
