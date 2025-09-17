@@ -30,29 +30,36 @@ exports.getMBookingList = async (params) => {
 
   return result;
 }
-
 exports.getInvoiceList = async (params) => {
   const {
     for_company_id = 0,
     search = "",
     current_page = 1,
     page_size = 10,
-    company_id = 0,
+    parent_company_id = 0,
     user_id = 0,
   } = params;
 
   const pdo = new PDO();
 
-  const offset = (current_page > 0 ? current_page - 1 : 0) * page_size;
+  // ✅ Pagination
+  const offset = Math.max(0, (current_page > 0 ? current_page - 1 : 0) * page_size);
+  const limit = parseInt(page_size, 10);
 
-  const queryParams = {
-    user_id,
-    for_company_id,
-    offset,
-    limit: page_size,
-  };
+  const queryParams = { user_id };
 
-  let searchQuery = '';
+  let whereClause = "";
+  if (for_company_id && for_company_id > 0) {
+    // 🔹 Filter by specific company
+    whereClause = "mbh.company_id = @for_company_id";
+    queryParams.for_company_id = for_company_id;
+  } else {
+    // 🔹 Default: parent company wise
+    whereClause = "mbh.parent_company_id = @parent_company_id";
+    queryParams.parent_company_id = parent_company_id;
+  }
+
+  let searchQuery = "";
   if (search && search.trim() !== "") {
     searchQuery = `
       AND (
@@ -72,18 +79,15 @@ exports.getInvoiceList = async (params) => {
       tb.ShortName  AS BranchShortName,
       COUNT(*) OVER() as total_count
     FROM dbo.MonthlyBillHead AS mbh
-    LEFT JOIN dbo.party_mast AS pm
-      ON pm.id = mbh.party_id
-    LEFT JOIN dbo.city_mast AS cm
-      ON cm.Id = mbh.city_id
-    LEFT JOIN dbo.tbl_branch AS tb
-      ON tb.Id = mbh.branch_id
+    LEFT JOIN dbo.party_mast AS pm ON pm.id = mbh.party_id
+    LEFT JOIN dbo.city_mast AS cm ON cm.Id = mbh.city_id
+    LEFT JOIN dbo.tbl_branch AS tb ON tb.Id = mbh.branch_id
     WHERE
-      (mbh.user_id = @user_id OR mbh.parent_company_id = @for_company_id)
+      ${whereClause}
       ${searchQuery}
     ORDER BY mbh.id DESC
-    OFFSET @offset ROWS
-    FETCH NEXT @limit ROWS ONLY;
+    OFFSET ${offset} ROWS
+    FETCH NEXT ${limit} ROWS ONLY;
   `;
 
   const data = await pdo.execute({
@@ -101,6 +105,9 @@ exports.getInvoiceList = async (params) => {
     data: rows,
   };
 };
+
+
+
 
 // exports.createMonthlyBill = async (params) => {
 //   params.AutoBill = 1;

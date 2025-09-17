@@ -76,16 +76,14 @@ class MInvoiceHandler extends WebSocketHandler {
     this.requireAuth();
     const params = {
       ...this.body,
-      company_id: this._user.company_id,
+      parent_company_id: this._user.company_id,
       user_id: this._user.Id,
     }
     const result = await getInvoiceList(params);
 
     if (result) {
       this.send({
-        type: "success",
         for: "minvoice.getMonthlyInvoiceList",
-        msg: "Monthly Invoice details retrieved successfully",
         data: result,
       });
     } else {
