@@ -447,16 +447,14 @@ exports.getOtherTaxableChargesList = async (params) => {
   });
 
   return result;
-
 }
 
 
 exports.getMonthlyInvoiceDutyList = async (params) => {
   const { InvoiceID, CompanyID } = params;
   const pdo = new PDO();
-
   const result = await pdo.execute({
-    sqlQuery: `exec spGet_MonthlyInvDutyList ${1}},${CompanyID}`
+    sqlQuery: `exec spGet_MonthlyInvDutyList ${InvoiceID},${CompanyID}`
   });
   return result;
 }
