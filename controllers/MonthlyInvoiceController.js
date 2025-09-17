@@ -35,7 +35,7 @@ exports.getInvoiceList = async (params) => {
   const {
     for_company_id = 0,
     search = "",
-    current_page = 0,
+    current_page = 1,
     page_size = 10,
     company_id = 0,
     user_id = 0,
@@ -43,31 +43,52 @@ exports.getInvoiceList = async (params) => {
 
   const pdo = new PDO();
 
-  const sqlQuery = `SELECT
-  mbh.*,
-  pm.party_name AS PartyName,
-  cm.CityName   AS CityName,
-  tb.ShortName  AS BranchShortName
-FROM dbo.MonthlyBillHead AS mbh
-LEFT JOIN dbo.party_mast AS pm
-  ON pm.id = mbh.party_id
-LEFT JOIN dbo.city_mast AS cm
-  ON cm.Id = mbh.city_id
-LEFT JOIN dbo.tbl_branch AS tb
-  ON tb.Id = mbh.branch_id
-WHERE
-  (mbh.user_id = @user_id OR mbh.parent_company_id = @for_company_id);`;
+  const offset = (current_page > 0 ? current_page - 1 : 0) * page_size;
+
+  const queryParams = {
+    user_id,
+    for_company_id,
+    offset,
+    limit: page_size,
+  };
+
+  let searchQuery = '';
+  if (search && search.trim() !== "") {
+    searchQuery = `
+      AND (
+        mbh.BillNo LIKE @search OR
+        pm.party_name LIKE @search OR
+        cm.CityName LIKE @search
+      )
+    `;
+    queryParams.search = `%${search.trim()}%`;
+  }
+
+  const sqlQuery = `
+    SELECT
+      mbh.*,
+      pm.party_name AS PartyName,
+      cm.CityName   AS CityName,
+      tb.ShortName  AS BranchShortName,
+      COUNT(*) OVER() as total_count
+    FROM dbo.MonthlyBillHead AS mbh
+    LEFT JOIN dbo.party_mast AS pm
+      ON pm.id = mbh.party_id
+    LEFT JOIN dbo.city_mast AS cm
+      ON cm.Id = mbh.city_id
+    LEFT JOIN dbo.tbl_branch AS tb
+      ON tb.Id = mbh.branch_id
+    WHERE
+      (mbh.user_id = @user_id OR mbh.parent_company_id = @for_company_id)
+      ${searchQuery}
+    ORDER BY mbh.id DESC
+    OFFSET @offset ROWS
+    FETCH NEXT @limit ROWS ONLY;
+  `;
 
   const data = await pdo.execute({
     sqlQuery,
-    params: {
-      company_id,
-      user_id,
-      for_company_id,
-      search: search && search.trim() !== "" ? `%${search}%` : "",
-      offset: current_page * page_size,
-      limit: page_size,
-    },
+    params: queryParams,
   });
 
   const total = data.length ? Number(data[0].total_count) || 0 : 0;
@@ -285,9 +306,6 @@ exports.createMonthlyBill = async (params) => {
 
     if (!billId) {
       // ✅ INSERT case
-      trx.input('company_id', params.company_id);
-      trx.input('branch_id', params.branch_id);
-
       const insertHeadSql = `
         INSERT INTO MonthlyBillHead (
           BillNo, taxtype, BillDate, company_id, parent_company_id, branch_id, city_id, party_id,
@@ -421,6 +439,3 @@ ORDER BY mbm.id DESC;`;
   });
   return result;
 }
-
-
-
