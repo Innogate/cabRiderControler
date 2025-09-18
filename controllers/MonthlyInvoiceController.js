@@ -385,8 +385,13 @@ exports.createMonthlyBill = async (params) => {
 };
 
 
-exports.getBookingsListByMID = async (params) => {
+exports.getBookingListByInvoiceId = async (params) => {
   const { booking_entry_id = 0 } = params;
+  if (!booking_entry_id) {
+    console.warn(`[getBookingsListByMID] 'booking_entry_id' is missing or zero. Received params:`, params);
+    return []; // Return empty array if no valid ID is provided
+  }
+
   const pdo = new PDO();
   const sqlQuery = `
 SELECT TOP 100
