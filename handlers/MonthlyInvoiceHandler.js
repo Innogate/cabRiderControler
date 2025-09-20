@@ -17,7 +17,6 @@ class MInvoiceHandler extends WebSocketHandler {
       this.send({
         type: "success",
         for: "minvoice.getMonthlySetupCode",
-        msg: "Booking details retrieved successfully",
         data: result,
       });
     } else {
@@ -40,7 +39,6 @@ class MInvoiceHandler extends WebSocketHandler {
       this.send({
         type: "success",
         for: "minvoice.getMonthlyBookingList",
-        msg: "Booking details retrieved successfully",
         data: result,
       });
     } else {
