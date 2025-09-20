@@ -385,6 +385,173 @@ exports.createMonthlyBill = async (params) => {
 };
 
 
+exports.getMonthlyBillById = async (params) => {
+  const { BillId } = params;
+
+  if (!BillId) {
+    throw new Error("BillId is required");
+  }
+
+  const pdo = new PDO();
+
+  const headerQuery = `
+    -- 1. Bill Header
+    SELECT 
+        mbh.*,
+        c.ShortName AS CompanyName,
+        b.branch_name AS BranchName,
+        cm.CityName AS CityName,
+        pm.party_name AS PartyName,
+        (SELECT mds.* FROM MonthDutySetup mds WHERE mds.id = mbh.monthly_duty_id FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) AS DutySetupJSON
+    FROM MonthlyBillHead mbh
+    LEFT JOIN tbl_company c ON c.Id = mbh.company_id
+    LEFT JOIN tbl_branch b ON b.Id = mbh.branch_id
+    LEFT JOIN city_mast cm ON cm.Id = mbh.city_id
+    LEFT JOIN party_mast pm ON pm.id = mbh.party_id
+    WHERE mbh.id = @BillId;
+  `;
+
+  const bookingsQuery = `
+    -- 2. Booking List
+    SELECT TOP 100
+        bk.ID AS BookingID,
+        bk.SlipNo,
+        CONVERT(VARCHAR, bk.RentalDate, 103) AS StartDate,
+        FORMAT(bk.GarageInDate, 'dd/MM/yyyy') AS EndDate,
+        ct.Car_Type,
+        bk.CarNo,
+        (SELECT TOP 1 G.GustName 
+         FROM Bookingsummery AS G 
+         WHERE BookingID = bk.ID) AS GuestName,
+        FORMAT(CONVERT(DATETIME, ISNULL(bk.GarageOutTime, '00:00')), 'HH:mm') AS GarageOutTime,
+        FORMAT(bk.GarageInDate, 'HH:mm') AS GarageInTime,
+        bk.GarageOutKm,
+        bk.GarageInKm,
+        bk.TotalHour,
+        bk.TotalKm,
+        ISNULL(
+            (SELECT STRING_AGG(c.charge_name + ' Rs. ' + CONVERT(VARCHAR, a.Amount), '#')
+             FROM tbl_booking_charge_summery AS a
+             LEFT JOIN charges_mast AS c 
+                ON a.ChargeId = c.ID
+             WHERE a.BookingID = bk.ID 
+               AND a.charge_Type = 'party'), 
+            ''
+        ) AS ChargesDetl,
+        ISNULL(bk.Project,'') AS Project,
+        ISNULL(bk.BookedBy, '') AS BookedBy,
+        w.Name AS DutyType,
+        v.Party_Name,
+        ISNULL(bk.Advance, 0) AS Advance,
+        fc.CityName AS FromCity,
+        tc.CityName AS ToCity,
+        '' AS CarTypeName,
+        '' AS DutyTypeName,
+        CAST(1 AS BIT) AS selected
+    FROM MonthlyBillMap AS mbm
+    JOIN booking_details AS bk 
+        ON bk.id = mbm.booking_id
+    LEFT JOIN Car_Type_Mast AS ct 
+        ON bk.CarType = ct.ID
+    LEFT JOIN duty_type_mast AS w 
+        ON bk.DutyType = w.ID
+    LEFT JOIN Party_Mast AS v 
+        ON bk.Party = v.ID
+    LEFT JOIN city_mast AS fc 
+        ON bk.FromCityID = fc.Id
+    LEFT JOIN city_mast AS tc 
+        ON bk.ToCityID = tc.Id
+    WHERE mbm.booking_entry_id = @BillId
+    ORDER BY mbm.id DESC;
+  `;
+
+  const taxableQuery = `
+    -- 3. Taxable Charges
+    SELECT 
+        c.charge_name,
+        c.taxable,
+        c.company_id,
+        c.TallyName,
+        SUM(bc.Amount) AS total_amount
+    FROM charges_mast c
+    JOIN tbl_booking_charge_summery bc 
+        ON c.id = bc.ChargeId
+    JOIN MonthlyBillMap mbm 
+        ON bc.BookingId = mbm.booking_id
+    WHERE mbm.booking_entry_id = @BillId
+      AND c.taxable = 'Y' AND bc.charge_Type='party'
+    GROUP BY c.charge_name, c.taxable, c.company_id, c.TallyName
+    ORDER BY c.charge_name;
+  `;
+
+  const nonTaxableQuery = `
+    -- 4. Non-Taxable Charges
+    SELECT 
+        c.charge_name,
+        c.taxable,
+        c.company_id,
+        c.TallyName,
+        SUM(bc.Amount) AS total_amount
+    FROM charges_mast c
+    JOIN tbl_booking_charge_summery bc 
+        ON c.id = bc.ChargeId
+    JOIN MonthlyBillMap mbm 
+        ON bc.BookingId = mbm.booking_id
+    WHERE mbm.booking_entry_id = @BillId
+      AND c.taxable = 'N' AND bc.charge_Type='party'
+    GROUP BY c.charge_name, c.taxable, c.company_id, c.TallyName
+    ORDER BY c.charge_name;
+  `;
+
+  const [headerResult, bookingsResult, taxableResult, nonTaxableResult] = await Promise.all([
+    pdo.execute({ sqlQuery: headerQuery, params: { BillId }, ttl: 300 }),
+    pdo.execute({ sqlQuery: bookingsQuery, params: { BillId }, ttl: 300 }),
+    pdo.execute({ sqlQuery: taxableQuery, params: { BillId }, ttl: 300 }),
+    pdo.execute({ sqlQuery: nonTaxableQuery, params: { BillId }, ttl: 300 }),
+  ]);
+
+  let billHeader = headerResult?.[0] || null;
+  const bookings = bookingsResult || [];
+  const taxable = taxableResult || [];
+  const nonTaxable = nonTaxableResult || [];
+
+  // Restructure Header
+  if (billHeader) {
+    let dutySetup = null;
+    if (billHeader.DutySetupJSON) {
+      try {
+        dutySetup = JSON.parse(billHeader.DutySetupJSON);
+      } catch (e) {
+        console.error("Error parsing DutySetupJSON:", e);
+      }
+    }
+
+    const restructuredHeader = {
+      ...billHeader,
+      company: { id: billHeader.company_id, name: billHeader.CompanyName },
+      branch: { id: billHeader.branch_id, name: billHeader.BranchName },
+      city: { id: billHeader.city_id, name: billHeader.CityName },
+      party: { id: billHeader.party_id, name: billHeader.PartyName },
+      monthly_duty: dutySetup,
+    };
+    delete restructuredHeader.CompanyName;
+    delete restructuredHeader.BranchName;
+    delete restructuredHeader.CityName;
+    delete restructuredHeader.PartyName;
+    delete restructuredHeader.DutySetupJSON;
+
+    billHeader = restructuredHeader;
+  }
+
+  return {
+    billHeader,
+    bookings,
+    taxable,
+    nonTaxable,
+  };
+};
+
+
 exports.getBookingListByInvoiceId = async (params) => {
   const { booking_entry_id = 0 } = params;
   if (!booking_entry_id) {
