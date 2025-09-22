@@ -4,7 +4,6 @@ services:
     container_name: api.${PROJECT_NAME}.${PROJECT_DOMAIN}
     volumes:
       - .:/app
-      - dotfiles:/home/vscode
     environment:
       - PRODUCTION=${PRODUCTION}
       - PORT=80
@@ -24,7 +23,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`api.timt.in`)"
+      - "traefik.http.routers.api.rule=Host(\"cbr.timt.in\")"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
-      - "traefik.http.services.api.loadbalancer.server.port=80
+      - "traefik.http.services.api.loadbalancer.server.port=80"
