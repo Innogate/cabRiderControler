@@ -163,8 +163,8 @@ exports.createBookingDetails = async (params) => {
 
   return {
     data,
-    status: output.StatusID,
-    message: output.StatusMessage,
+    StatusID: output.StatusID,
+    StatusMessage: output.StatusMessage,
     total: output.TotalCount,
   };
 };

@@ -46,21 +46,24 @@ class BookingHandler extends WebSocketHandler {
       user_id: this._user.Id,
     };
 
-    // console.log("params.postJsonData (string):", params.postJsonData); // ✅ Now a string
 
     const result = await createBookingDetails(params);
-    if (result.status != 1) {
+    if (result.StatusID === 1) {
+      this.send({ msg: result.StatusMessage, type: "success" });
+      this.broadcastTo(
+        {
+          for: "createBookingDetails",
+          ...result,
+        },
+        { company_id: this._user.company_id }
+      );
+    } else {
       this.send({
-        msg: "Something went wrong please try again later",
-        type: "warn",
+        msg: "No data found",
+        type: "error",
         ...result,
       });
     }
-    this.log(result);
-    this.send({
-      for: "bookingTableData",
-      ...result,
-    });
   }
 }
 

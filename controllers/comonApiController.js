@@ -158,7 +158,7 @@ exports.getAllPartyRateByCityDropdown = async (params) => {
     city_id,
     party_id,
     car_type,
-    duty_type
+    duty_type,
   } = params;
   const pdo = new PDO();
   const { data, output } = await pdo.callProcedure({
@@ -331,4 +331,3 @@ exports.getAllCartypeMasterDropdown = async (params) => {
     TotalCount: output.TotalCount
   };
 }
-
