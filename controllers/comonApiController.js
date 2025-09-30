@@ -158,7 +158,7 @@ exports.getAllPartyRateByCityDropdown = async (params) => {
     city_id,
     party_id,
     car_type,
-    duty_type,
+    // duty_type,
   } = params;
   const pdo = new PDO();
   const { data, output } = await pdo.callProcedure({
@@ -167,7 +167,7 @@ exports.getAllPartyRateByCityDropdown = async (params) => {
       { name: "city_id", type: sql.Int, value: city_id },
       { name: "party_id", type: sql.Int, value: party_id },
       { name: "car_type", type: sql.Int, value: car_type },
-      { name: "duty_type", type: sql.VarChar(50), value: duty_type },
+      // { name: "duty_type", type: sql.VarChar(50), value: duty_type },
       { name: "user_id", type: sql.Int, value: user_id },
       { name: "company_id", type: sql.Int, value: company_id },
     ],
