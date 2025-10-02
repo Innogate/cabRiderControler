@@ -27,7 +27,7 @@ const {
   gatAllPartyMaster,
   createUpdateParty,
 } = require("../controllers/partyMasterController");
-const { gateAllVendor } = require("../controllers/vendorMasterController");
+const { gateAllVendor, getAllVendorListDropdown, getCarTypesByVendorId } = require("../controllers/vendorMasterController");
 const {
   getAllUserList,
   createUpdateUser,
@@ -469,6 +469,45 @@ class MasterHandler extends WebSocketHandler {
         type: "warning",
         ...result,
       });
+    }
+  }
+
+  async getAllVendorDropdown() {
+    this.requireAuth();
+    const params = {
+      company_id: this._user.company_id
+    }
+    const result = await getAllVendorListDropdown(params);
+    if (result.StatusID === 1) {
+      this.send({
+        for: "getAllVendorListDropdown",
+        ...result,
+      });
+    } else {
+      this.send({
+        type: "warning",
+        ...result,
+      })
+    }
+  }
+
+  async getCarTypesByVendorId() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id
+    }
+    const result = await getCarTypesByVendorId(params);
+    if (result.StatusID === 1) {
+      this.send({
+        for: "getCarTypesByVendorId",
+        ...result,
+      });
+    } else {
+      this.send({
+        type: "warning",
+        ...result,
+      })
     }
   }
 
