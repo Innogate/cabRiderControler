@@ -120,5 +120,115 @@ exports.createUpdateVendorMaster = async (params) => {
     StatusMessage: output.StatusMessage,
     TotalCount: output.TotalCount,
   };
+
+
+
 };
 
+
+exports.getAllVendorListDropdown = async (params) => {
+  const {
+    company_id = 0,
+  } = params;
+  const pdo = new PDO();
+  const sqlQuery = `
+    SELECT id, vendor_name, mobileno 
+    FROM vendor_mast 
+    WHERE company_id = @company_id
+    ORDER BY vendor_name ASC;
+  `;
+  try {
+    const data = await pdo.execute({
+      sqlQuery,
+      params: { company_id }
+    });
+
+    return {
+      data: data,
+      StatusID: 1,
+      StatusMessage: "Vendor list fetched successfully.",
+      TotalCount: data.length
+    };
+  } catch (error) {
+    console.error("Error in getAllVendorListDropdown:", error);
+    return { data: [], StatusID: 0, StatusMessage: error.message, TotalCount: 0 };
+  }
+};
+
+
+
+exports.getCarTypesByVendorId = async (params) => {
+  const {
+    vendor_id,
+    company_id = 0,
+  } = params;
+  const pdo = new PDO();
+  const sqlQuery = `
+    SELECT 
+      v.id AS VendorId,
+      v.vendor_name,
+      v.mobileno,
+      c.id AS CarId,
+      c.CarNo,
+      ct.id AS CarTypeId,
+      ct.car_type AS CarTypeName
+    FROM vendor_mast v
+    INNER JOIN car_mast c 
+      ON v.id = c.VendorId
+    INNER JOIN car_type_mast ct 
+      ON c.CarType = ct.id 
+    WHERE v.company_id = @company_id
+      AND v.id = @vendor_id
+    ORDER BY ct.car_type ASC;
+  `;
+  try {
+    const rows = await pdo.execute({
+      sqlQuery,
+      params: { company_id, vendor_id }
+    });
+
+    // Group rows by VendorId and then by CarTypeId
+    const grouped = rows.reduce((acc, row) => {
+      let vendor = acc.find(v => v.VendorId === row.VendorId);
+      if (!vendor) {
+        vendor = {
+          VendorId: row.VendorId,
+          vendor_name: row.vendor_name,
+          mobileno: row.mobileno,
+          carDetalse: []
+        };
+        acc.push(vendor);
+      }
+
+      // check if this CarType already exists in carDetalse
+      let carType = vendor.carDetalse.find(ct => ct.CarTypeId === row.CarTypeId);
+      if (!carType) {
+        carType = {
+          CarTypeId: row.CarTypeId,
+          CarTypeName: row.CarTypeName,
+          cars: []
+        };
+        vendor.carDetalse.push(carType);
+      }
+
+      // push the car under that CarType
+      carType.cars.push({
+        CarId: row.CarId,
+        CarNo: row.CarNo
+      });
+
+      return acc;
+    }, []);
+
+
+    return {
+      data: grouped,
+      StatusID: 1,
+      StatusMessage: "Vendor cartype fetched successfully.",
+      TotalCount: grouped.length
+    };
+  } catch (error) {
+    console.error("Error in getCarTypesByVendorId:", error);
+    return { data: [], StatusID: 0, StatusMessage: error.message, TotalCount: 0 };
+  }
+};
