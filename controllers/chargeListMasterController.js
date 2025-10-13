@@ -47,6 +47,7 @@ exports.createUpdateCharges = async (params) => {
     charge_name = '',
     TallyName = '',
     taxable = '',
+    ChargesType,
     user_id = 0,
     company_id = 1,
   } = params;
@@ -58,6 +59,7 @@ exports.createUpdateCharges = async (params) => {
       { name: "charge_name", type: sql.VarChar(50), value: charge_name },
       { name: "TallyName", type: sql.VarChar(200), value: TallyName },
       { name: "taxable", type: sql.VarChar(1), value: taxable },
+      { name: "ChargesType", type: sql.VarChar(50), value: ChargesType },
       { name: "user_id", type: sql.Int, value: user_id },
       { name: "company_id", type: sql.Int, value: company_id },
     ],
