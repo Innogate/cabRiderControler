@@ -21,7 +21,7 @@ class AllotmentHandler extends WebSocketHandler {
             this.send({ msg: result.StatusMessage, type: "success" });
             this.broadcastTo(
                 {
-                    for: "CarTypeAddUpdate",
+                    for: "createUpdateAllotment",
                     StatusID: result.StatusID,
                     data: result.data,
                 },

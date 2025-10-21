@@ -27,7 +27,7 @@ const {
   gatAllPartyMaster,
   createUpdateParty,
 } = require("../controllers/partyMasterController");
-const { gateAllVendor, getAllVendorListDropdown, getCarTypesByVendorId } = require("../controllers/vendorMasterController");
+const { gateAllVendor, getAllVendorListDropdown, getCarTypesByVendorId, createUpdateVendorMaster } = require("../controllers/vendorMasterController");
 const {
   getAllUserList,
   createUpdateUser,
@@ -53,7 +53,22 @@ const { getAllCompany, createUpdateCompany, deleteCompany } = require("../contro
 
 class MasterHandler extends WebSocketHandler {
   constructor() {
-    super();
+    // Register this single handler for multiple master-related namespaces.
+    super("master"); // Explicitly register for 'master'
+    const Registry = require("../core/Registry");
+    Registry.register("vendor", this);
+    Registry.register("party", this);
+    Registry.register("userMaster", this);
+    Registry.register("carType", this);
+    Registry.register("charges", this);
+    Registry.register("driver", this);
+    Registry.register("driverSalary", this);
+    Registry.register("partyRate", this);
+    Registry.register("monthlyDuty", this);
+    Registry.register("guest", this);
+    Registry.register("gl", this);
+    Registry.register("branch", this);
+    Registry.register("company", this);
     this.publicCommands = [];
   }
 
@@ -455,7 +470,7 @@ class MasterHandler extends WebSocketHandler {
       user_id: this._user.Id,
     };
     const result = await createUpdateVendorMaster(params);
-    if (result) {
+    if (result.StatusID === 1) {
       this.broadcastTo(
         {
           for: "createUpdateVendorMaster",
