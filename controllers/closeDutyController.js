@@ -39,6 +39,8 @@ exports.closeDuty = async (params) => {
         Advance = 0,
         VendorAdvanced = null,
         IgnoreLastDay,
+        PartyMinHour,
+        PartyMinKM,
         user_id,
         company_id
     } = params;
@@ -85,6 +87,8 @@ exports.closeDuty = async (params) => {
             { name: "Advance", type: sql.Decimal(18, 2), value: Advance },
             { name: "VendorAdvanced", type: sql.Decimal(18, 2), value: VendorAdvanced },
             { name: "IgnoreLastDay", type: sql.Bit, value: IgnoreLastDay },
+            { name: "PartyMinHour", type: sql.Decimal(18, 2), value: PartyMinHour },
+            { name: "PartyMinKM", type: sql.BigInt, value: PartyMinKM },
             { name: "user_id", type: sql.Int, value: user_id },
             { name: "company_id", type: sql.Int, value: company_id },
         ],
