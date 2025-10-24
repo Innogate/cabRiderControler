@@ -14,6 +14,7 @@ const {
   guestFilterBySearchParametor,
   carSearchFilterBySearchParametor,
   getAllCartypeMasterDropdown,
+  getAllVendorRateByCityDropdown,
 } = require("../controllers/comonApiController");
 
 class CommonHandler extends WebSocketHandler {
@@ -156,6 +157,28 @@ class CommonHandler extends WebSocketHandler {
     }
   }
 
+  async getAllVendorRateByCity() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+      user_id: this._user.Id,
+    };
+    const result = await getAllVendorRateByCityDropdown(params);
+    if (result?.data?.length > 0) {
+      result.for = "getAllVendorRateByCityDropdown";
+      this.send(result);
+    } else {
+      // Always send a response, even if it's empty, to resolve the promise on the frontend.
+      this.send({
+        for: "getAllVendorRateByCityDropdown",
+        data: [],
+        StatusID: 2, // No data found
+        StatusMessage: "No vendor rates found for the criteria.",
+      });
+    }
+  }
+
   async getAllCompany() {
     this.requireAuth();
     const params = {
@@ -265,7 +288,6 @@ class CommonHandler extends WebSocketHandler {
       });
     }
   }
-
 }
 
 module.exports = new CommonHandler();

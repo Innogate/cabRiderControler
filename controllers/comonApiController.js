@@ -187,6 +187,44 @@ exports.getAllPartyRateByCityDropdown = async (params) => {
 }
 
 
+exports.getAllVendorRateByCityDropdown = async (params) => {
+  const {
+    user_id,
+    company_id,
+    city_id,
+    vendor_id,
+    car_type,
+    // duty_type,
+  } = params;
+  console.log(params)
+  const pdo = new PDO();
+  const { data, output } = await pdo.callProcedure({
+    procName: "sp_get_vendorrate_by_city",
+    inputParams: [
+      { name: "city_id", type: sql.Int, value: city_id },
+      { name: "vendor_id", type: sql.Int, value: vendor_id },
+      { name: "car_type", type: sql.Int, value: car_type },
+      // { name: "duty_type", type: sql.VarChar(50), value: duty_type },
+      { name: "user_id", type: sql.Int, value: user_id },
+      { name: "company_id", type: sql.Int, value: company_id },
+    ],
+    outputParams: [
+      { name: "StatusID", type: sql.Int },
+      { name: "StatusMessage", type: sql.VarChar(200) },
+      { name: "TotalCount", type: sql.Int },
+    ],
+  });
+  console.log(data)
+
+  return {
+    data: data,
+    StatusID: output.StatusID,
+    StatusMessage: output.StatusMessage,
+    TotalCount: output.TotalCount
+  };
+}
+
+
 exports.getAllCompanyDropdown = async (params) => {
   const {
     user_id,
