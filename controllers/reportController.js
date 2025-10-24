@@ -5,9 +5,9 @@ exports.bookingRegister = async (params) => {
   const {
     StartDate,
     EndDate,
-    PartyName = "",
+    PartyID = "",
     Project = "",
-    CityName = "",
+    CityID = "",
     company_id,
     user_id,
   } = params;
@@ -18,9 +18,9 @@ exports.bookingRegister = async (params) => {
     inputParams: [
       { name: "StartDate", type: sql.SmallDateTime, value: StartDate },
       { name: "EndDate", type: sql.SmallDateTime, value: EndDate },
-      { name: "PartyName", type: sql.NVarChar(50), value: PartyName },
+      { name: "PartyID", type: sql.BigInt, value: PartyID },
       { name: "Project", type: sql.NVarChar(50), value: Project },
-      { name: "CityName", type: sql.NVarChar(50), value: CityName },
+      { name: "CityID", type: sql.BigInt, value: CityID },
       { name: "company_id", type: sql.BigInt, value: company_id },
     ],
   });
