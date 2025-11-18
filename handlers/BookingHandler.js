@@ -1,8 +1,12 @@
 const WebSocketHandler = require("../core/WebSocketHandler");
 const jwt = require("../core/jwt");
 // Controllers
-const { getBookingSearch } = require("../controllers/bookingController");
-const { createBookingDetails } = require("../controllers/bookingController");
+const {
+  getBookingSearch,
+  createBookingDetails,
+  getBookingForEdit,
+  getBookingDetailsByBookingId,
+} = require("../controllers/bookingController");
 
 class BookingHandler extends WebSocketHandler {
   constructor() {
@@ -65,6 +69,28 @@ class BookingHandler extends WebSocketHandler {
       });
     }
   }
+
+  async getBookingByBookingId() {
+    this.requireAuth();
+    const params = {
+      ...this.body,
+      company_id: this._user.company_id,
+    };
+    const result = await getBookingDetailsByBookingId(params);
+    if (result.status !== 1) {
+      this.send({
+        msg: result.message,
+        type: "warn",
+        ...result,
+      });
+    }
+    this.send({
+      for: "getBookingForEdit",
+      ...result,
+    });
+  }
 }
+
+
 
 module.exports = new BookingHandler();

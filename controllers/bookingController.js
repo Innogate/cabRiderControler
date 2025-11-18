@@ -168,3 +168,61 @@ exports.createBookingDetails = async (params) => {
     total: output.TotalCount,
   };
 };
+
+
+exports.getBookingDetailsByBookingId = async (params) => {
+  const { id, company_id } = params;
+  const pdo = new PDO();
+
+  if (!id) {
+    return { StatusID: 0, StatusMessage: "Booking ID is required", data: null };
+  }
+
+  // This query is now aligned with getVendorDutyCloseById to provide a consistent and rich data object.
+  const sqlQuery = `
+    SELECT 
+        bd.*,
+        pm.party_name AS PartyName,
+        cm.car_type AS CarTypeName,
+        fc.CityName AS FromCityName,
+        tc.CityName AS ToCityName,
+        (
+            SELECT 
+                bs.id,
+                bs.bookingID,
+                bs.GustName,
+                bs.ContactNo,
+                bs.Address,
+                bs.Remarks,
+                bs.AditionalContactNo,
+                bs.drop_address AS DropAddress
+            FROM Bookingsummery bs
+            WHERE bs.bookingID = bd.id
+            FOR JSON PATH
+        ) AS BookingSummary
+    FROM booking_details bd
+    LEFT JOIN party_mast pm ON bd.Party = pm.id
+    LEFT JOIN car_type_mast cm ON bd.CarType = cm.id
+    LEFT JOIN city_mast fc ON bd.FromCityID = fc.id
+    LEFT JOIN city_mast tc ON bd.ToCityID = tc.id
+    WHERE bd.id = @id AND bd.company_id = @company_id;
+  `;
+
+  try {
+    const result = await pdo.execute({
+      sqlQuery: sqlQuery,
+      params: { id, company_id },
+    });
+
+    const data = result.length > 0 ? result[0] : null;
+
+    return {
+      data: data,
+      StatusID: data ? 1 : 2,
+      StatusMessage: data ? "Booking details retrieved successfully" : "No booking found with the provided ID",
+    };
+  } catch (error) {
+    console.error("Error in getBookingDetailsByBookingId:", error);
+    return { data: null, StatusID: 0, StatusMessage: error.message };
+  }
+};
