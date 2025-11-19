@@ -50,6 +50,7 @@ exports.getBookingSearch = async (params) => {
     to_date,
     status = "All",
     sortBy = "id desc",
+    party_id,
     user_id,
     company_id,
   } = params;
@@ -66,6 +67,7 @@ exports.getBookingSearch = async (params) => {
       { name: "to_date", type: sql.VarChar(200), value: to_date },
       { name: "Status", type: sql.NVarChar(50), value: status },
       { name: "sortBy", type: sql.NVarChar(250), value: sortBy },
+      { name: "party_id", type: sql.Int, value: party_id},
       { name: "user_id", type: sql.Int, value: user_id },
       { name: "company_id", type: sql.Int, value: company_id },
     ],
